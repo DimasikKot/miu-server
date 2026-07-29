@@ -41,8 +41,7 @@ def build(pack: str):
     if not pack_path.exists():
         raise HTTPException(404, "Pack not found")
 
-    servers = []
-    manifest = build_manifest(pack_path, servers)
+    manifest = build_manifest(pack_path)
     save_manifest(pack_path, manifest)
 
     return {"status": "rebuilt", "version": manifest.version}

@@ -1,16 +1,6 @@
 from typing import Dict, List
 from pydantic import BaseModel, Field
 
-# ---------- Download ----------
-
-
-class DownloadFile(BaseModel):
-    path: str
-    sha256: str
-    size: int
-    url: str
-
-
 # ---------- File ----------
 
 
@@ -34,17 +24,33 @@ class ServerInfo(BaseModel):
 
 class ServerManifest(BaseModel):
     version: int = 1
+    pack: ManifestFile | None
+    instance: ManifestFile | None
     files: Dict[str, ManifestFile] = Field(default_factory=dict)
     removed: Dict[str, List[str]] = Field(default_factory=dict)
     servers: List[ServerInfo] = Field(default_factory=list)
+    resource_packs: List[str] = Field(default_factory=list)
 
 
 # ---------- Client Manifest ----------
 
 
 class ClientManifest(BaseModel):
+    pack: ManifestFile | None
+    instance: ManifestFile | None
     files: Dict[str, ManifestFile]
     servers: List[ServerInfo] = Field(default_factory=list)
+    resource_packs: List[str] = Field(default_factory=list)
+
+
+# ---------- Download ----------
+
+
+class DownloadFile(BaseModel):
+    path: str
+    sha256: str
+    size: int
+    url: str
 
 
 # ---------- Update ----------
@@ -55,3 +61,4 @@ class UpdateResponse(BaseModel):
     download: List[DownloadFile]
     delete: List[str]
     servers: List[ServerInfo]
+    resource_packs: List[str] = Field(default_factory=list)
