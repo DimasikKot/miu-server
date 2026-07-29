@@ -111,17 +111,19 @@ def build_download_list(
         if client_file.sha256 == server_file.sha256:
             continue
 
-        # SHA отличается
-        download.append(
-            DownloadFile(
-                path=server_path,
-                sha256=server_file.sha256,
-                size=server_file.size,
-                url=f"{base_url}/files/"
-                f"{quote(instance)}/"
-                f"{quote(server_path, safe='/')}",
+        # SHA отличается и это строгое место (моды)
+        strict_folders = ["minecraft/mods"]
+        if any(server_path.startswith(folder) for folder in strict_folders):
+            download.append(
+                DownloadFile(
+                    path=server_path,
+                    sha256=server_file.sha256,
+                    size=server_file.size,
+                    url=f"{base_url}/files/"
+                    f"{quote(instance)}/"
+                    f"{quote(server_path, safe='/')}",
+                )
             )
-        )
 
     return download
 
