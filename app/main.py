@@ -1,15 +1,11 @@
 from pathlib import Path
-
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
-
 from models import ClientManifest
-
 from manifest import build_manifest, load_manifest, save_manifest
-
 from diff import compare
 
 FILES_DIR = Path("/files")
@@ -23,13 +19,11 @@ app.mount("/files", StaticFiles(directory=FILES_DIR), name="files")
 
 @app.get("/")
 def root():
-
     return {"status": "ok"}
 
 
 @app.get("/manifest/{pack}")
 def manifest(pack: str):
-
     path = FILES_DIR / pack
     if not path.exists():
         raise HTTPException(404, "Pack not found")
@@ -43,7 +37,6 @@ def manifest(pack: str):
 
 @app.post("/build/{pack}")
 def build(pack: str):
-
     pack_path = FILES_DIR / pack
     if not pack_path.exists():
         raise HTTPException(404, "Pack not found")
@@ -57,7 +50,6 @@ def build(pack: str):
 
 @app.post("/update/{pack}")
 def update(pack: str, client: ClientManifest, request: Request):
-
     pack_path = FILES_DIR / pack
     if not pack_path.exists():
         raise HTTPException(404, "Pack not found")

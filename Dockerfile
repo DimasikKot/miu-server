@@ -10,4 +10,4 @@ COPY app/ .
 
 EXPOSE 10033
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10033"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "10033", "--reload"]
