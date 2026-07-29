@@ -5,9 +5,7 @@ from models import ClientManifest, DownloadFile, ServerManifest, UpdateResponse
 
 
 def is_removed(path: str, sha256: str, server: ServerManifest) -> bool:
-    """
-    Проверяет, считается ли данный SHA удалённым.
-    """
+    # Проверяет, считается ли данный SHA удалённым
     removed = server.removed.get(path, {})
     return sha256 in removed
 
@@ -15,6 +13,7 @@ def is_removed(path: str, sha256: str, server: ServerManifest) -> bool:
 def build_delete_list(client: ClientManifest, server: ServerManifest) -> List[str]:
     delete = []
     for path, file in client.files.items():
+
         # Если файла больше нет на сервере,
         # но его SHA находится в removed
         if path not in server.files:
@@ -60,7 +59,7 @@ def build_download_list(
                 path=path,
                 sha256=server_file.sha256,
                 size=server_file.size,
-                url=f"{base_url}/files/{pack}/{path}",
+                url=f"{base_url}/files/" f"{quote(pack)}/" f"{quote(path, safe='/')}",
             )
         )
 

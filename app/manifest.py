@@ -70,6 +70,7 @@ def build_manifest(pack_path: Path, servers):
 
         # сравнение старого и нового
         for path, old_file in old.files.items():
+
             # файл полностью удалили
             if path not in files:
                 removed.setdefault(path, [])
@@ -87,6 +88,7 @@ def build_manifest(pack_path: Path, servers):
                     removed[path].append(old_file.sha256)
 
     # Очистка removed
+
     # если sha256 снова существует среди актуальных файлов,
     # он больше не является удалённым
     for path, hashes in list(removed.items()):
