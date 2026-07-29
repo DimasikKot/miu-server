@@ -47,7 +47,7 @@ def build_download_list(
 
     client_pack = client_manifest.pack
     server_pack = server_manifest.pack
-    if client_instance is None or (
+    if client_pack is None or (
         server_pack is not None and client_pack.sha256 != server_pack.sha256
     ):
         # SHA отличается или файл отсутствует у клиента
