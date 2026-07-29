@@ -6,62 +6,37 @@ from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
 
-from models import (
-    ClientManifest,
-    MinecraftInfo
-)
+from models import ClientManifest
 
-from manifest import (
-    build_manifest,
-    load_manifest,
-    save_manifest
-)
+from manifest import build_manifest, load_manifest, save_manifest
 
 from diff import compare
-
 
 FILES_DIR = Path("/files")
 
 
-app = FastAPI(
-    title="Minecraft Updater",
-    version="0.1"
-)
+app = FastAPI(title="Minecraft Updater", version="0.1")
 
 
-app.mount(
-    "/files",
-    StaticFiles(directory=FILES_DIR),
-    name="files"
-)
+app.mount("/files", StaticFiles(directory=FILES_DIR), name="files")
 
 
 @app.get("/")
 def root():
 
-    return {
-        "status": "ok"
-    }
+    return {"status": "ok"}
 
 
 @app.get("/manifest/{pack}")
 def manifest(pack: str):
 
     path = FILES_DIR / pack
-
     if not path.exists():
-        raise HTTPException(
-            404,
-            "Pack not found"
-        )
+        raise HTTPException(404, "Pack not found")
 
     manifest = load_manifest(path)
-
     if manifest is None:
-        raise HTTPException(
-            404,
-            "Manifest not found"
-        )
+        raise HTTPException(404, "Manifest not found")
 
     return manifest
 
@@ -70,59 +45,27 @@ def manifest(pack: str):
 def build(pack: str):
 
     pack_path = FILES_DIR / pack
-
     if not pack_path.exists():
-        raise HTTPException(
-            404,
-            "Pack not found"
-        )
+        raise HTTPException(404, "Pack not found")
 
     servers = []
+    manifest = build_manifest(pack_path, servers)
+    save_manifest(pack_path, manifest)
 
-    manifest = build_manifest(
-        pack_path,
-        servers
-    )
-
-    save_manifest(
-        pack_path,
-        manifest
-    )
-
-    return {
-        "status": "rebuilt",
-        "version": manifest.version
-    }
+    return {"status": "rebuilt", "version": manifest.version}
 
 
 @app.post("/update/{pack}")
-def update(
-    pack: str,
-    client: ClientManifest,
-    request: Request
-):
+def update(pack: str, client: ClientManifest, request: Request):
 
     pack_path = FILES_DIR / pack
-
     if not pack_path.exists():
-        raise HTTPException(
-            404,
-            "Pack not found"
-        )
+        raise HTTPException(404, "Pack not found")
 
     server = load_manifest(pack_path)
-
     if server is None:
-        raise HTTPException(
-            500,
-            "Manifest missing"
-        )
-    
-    result = compare(
-        pack,
-        client,
-        server,
-        str(request.base_url).rstrip("/")
-    )
+        raise HTTPException(500, "Manifest missing")
+
+    result = compare(pack, client, server, str(request.base_url).rstrip("/"))
 
     return result
