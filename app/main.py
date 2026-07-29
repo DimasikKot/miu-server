@@ -8,13 +8,11 @@ from models import ClientManifest
 from manifest import build_manifest, load_manifest, save_manifest
 from diff import compare
 
-FILES_DIR = Path("/files")
+FILES_DIR_PATH = Path("/files")
 
 
-app = FastAPI(title="Minecraft Updater", version="0.1")
-
-
-app.mount("/files", StaticFiles(directory=FILES_DIR), name="files")
+app = FastAPI(title="Minecraft Updater", version="1.0.0")
+app.mount("/files", StaticFiles(directory=FILES_DIR_PATH), name="files")
 
 
 @app.get("/")
@@ -22,11 +20,11 @@ def root():
     return {"status": "ok"}
 
 
-@app.get("/manifest/{pack}")
-def manifest(pack: str):
-    path = FILES_DIR / pack
+@app.get("/manifest/{instance}")
+def manifest(instance: str):
+    path = FILES_DIR_PATH / instance
     if not path.exists():
-        raise HTTPException(404, "Pack not found")
+        raise HTTPException(404, "Instance not found")
 
     manifest = load_manifest(path)
     if manifest is None:
@@ -35,28 +33,28 @@ def manifest(pack: str):
     return manifest
 
 
-@app.post("/build/{pack}")
-def build(pack: str):
-    pack_path = FILES_DIR / pack
-    if not pack_path.exists():
-        raise HTTPException(404, "Pack not found")
+@app.post("/build/{instance}")
+def build(instance: str):
+    instance_path = FILES_DIR_PATH / instance
+    if not instance_path.exists():
+        raise HTTPException(404, "Instance not found")
 
-    manifest = build_manifest(pack_path)
-    save_manifest(pack_path, manifest)
+    manifest = build_manifest(instance_path)
+    save_manifest(instance_path, manifest)
 
-    return {"status": "rebuilt", "version": manifest.version}
+    return {"status": "success", "version": manifest.version}
 
 
-@app.post("/update/{pack}")
-def update(pack: str, client: ClientManifest, request: Request):
-    pack_path = FILES_DIR / pack
-    if not pack_path.exists():
-        raise HTTPException(404, "Pack not found")
+@app.post("/update/{instance}")
+def update(instance: str, client_manifest: ClientManifest, request: Request):
+    instance_path = FILES_DIR_PATH / instance
+    if not instance_path.exists():
+        raise HTTPException(404, "Instance not found")
 
-    server = load_manifest(pack_path)
-    if server is None:
+    server_manifest = load_manifest(instance_path)
+    if server_manifest is None:
         raise HTTPException(500, "Manifest missing")
 
-    result = compare(pack, client, server, str(request.base_url).rstrip("/"))
+    result = compare(instance, client_manifest, server_manifest, str(request.base_url).rstrip("/"))
 
     return result
