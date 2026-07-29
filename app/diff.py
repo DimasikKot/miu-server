@@ -1,7 +1,13 @@
 from typing import List
 from urllib.parse import quote
 
-from models import ClientManifest, DownloadFile, ServerManifest, UpdateResponse
+from models import (
+    ClientManifest,
+    DownloadFile,
+    ServerInfo,
+    ServerManifest,
+    UpdateResponse,
+)
 
 
 def is_removed(path: str, sha256: str, server_manifest: ServerManifest) -> bool:
@@ -120,22 +126,22 @@ def build_download_list(
     return download
 
 
-def compare_servers(client_servers: List[str], server_servers: List[str]) -> List[str]:
+def compare_servers(
+    client_servers: List[ServerInfo], server_servers: List[ServerInfo]
+) -> List[ServerInfo]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
     result = list(client_servers)
 
-    # 2. Создаём множество из текущих серверов клиента для быстрого поиска (O(1))
-    # Также это автоматически убирает возможные дубликаты, если они вдруг были в client_servers
-    existing_servers = set(result)
+    # 2. Создаём множество IP-адресов уже существующих серверов для быстрого поиска
+    # IP используем как уникальный идентификатор сервера
+    existing_ips = {server.ip for server in result}
 
     # 3. Проходим по списку серверов
     for server in server_servers:
-        # Если сервера ещё нет у клиента, добавляем его в конец
-        if server not in existing_servers:
+        # Если сервера с таким IP ещё нет у клиента, добавляем его в конец
+        if server.ip not in existing_ips:
             result.append(server)
-            existing_servers.add(
-                server
-            )  # Обновляем множество, чтобы не добавить его повторно
+            existing_ips.add(server.ip)  # Обновляем множество
 
     return result
 
