@@ -110,6 +110,48 @@ def build_download_list(
     return download
 
 
+def compare_servers(client_servers: List[str], server_servers: List[str]) -> List[str]:
+    # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
+    result = list(client_servers)
+
+    # 2. Создаём множество из текущих серверов клиента для быстрого поиска (O(1))
+    # Также это автоматически убирает возможные дубликаты, если они вдруг были в client_servers
+    existing_servers = set(result)
+
+    # 3. Проходим по списку серверов
+    for server in server_servers:
+        # Если сервера ещё нет у клиента, добавляем его в конец
+        if server not in existing_servers:
+            result.append(server)
+            existing_servers.add(
+                server
+            )  # Обновляем множество, чтобы не добавить его повторно
+
+    return result
+
+
+def compare_resource_packs(
+    client_resource_packs: List[str], server_resource_packs: List[str]
+) -> List[str]:
+    # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
+    result = list(client_resource_packs)
+
+    # 2. Создаём множество из текущих ресурс паков клиента для быстрого поиска (O(1))
+    # Также это автоматически убирает возможные дубликаты, если они вдруг были в client_resource_packs
+    existing_resource_packs = set(result)
+
+    # 3. Проходим по списку ресурс паков
+    for resource_pack in server_resource_packs:
+        # Если ресурс паков ещё нет у клиента, добавляем его в конец
+        if resource_pack not in existing_resource_packs:
+            result.append(resource_pack)
+            existing_resource_packs.add(
+                resource_pack
+            )  # Обновляем множество, чтобы не добавить его повторно
+
+    return result
+
+
 def compare(
     instance: str,
     client_manifest: ClientManifest,
@@ -123,6 +165,8 @@ def compare(
         version=server_manifest.version,
         download=download,
         delete=delete,
-        servers=server_manifest.servers,
-        resource_packs=server_manifest.resource_packs,
+        servers=compare_servers(client_manifest.servers, server_manifest.servers),
+        resource_packs=compare_resource_packs(
+            client_manifest.resource_packs, server_manifest.resource_packs
+        ),
     )
