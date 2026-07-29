@@ -47,8 +47,8 @@ def build_download_list(
 
     client_pack = client_manifest.pack
     server_pack = server_manifest.pack
-    if client_pack is None or (
-        server_pack is not None and client_pack.sha256 != server_pack.sha256
+    if server_pack is not None and (
+        client_pack is None or client_pack.sha256 != server_pack.sha256
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
@@ -64,8 +64,8 @@ def build_download_list(
 
     client_instance = client_manifest.instance
     server_instance = server_manifest.instance
-    if client_instance is None or (
-        server_instance is not None and client_instance.sha256 != server_instance.sha256
+    if server_instance is not None and (
+        client_instance is None or client_instance.sha256 != server_instance.sha256
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
