@@ -144,15 +144,9 @@ def compare(
     )
 
     return UpdateResponse(
-
         version=server.version,
-
-        minecraft=server.minecraft,
-
         download=download,
-
         delete=delete,
-
         servers=server.servers
 
     )

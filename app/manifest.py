@@ -5,7 +5,6 @@ from pathlib import Path
 
 from models import (
     ManifestFile,
-    MinecraftInfo,
     ServerManifest
 )
 
@@ -13,27 +12,17 @@ MANIFEST_NAME = "manifest.json"
 
 
 def sha256(path: Path) -> str:
-
     h = hashlib.sha256()
-
     with open(path, "rb") as f:
-
         while True:
-
             chunk = f.read(1024 * 1024)
-
             if not chunk:
                 break
-
             h.update(chunk)
-
     return h.hexdigest()
 
-
 def scan_files(pack_path: Path):
-
     result = {}
-
     folders = [
         "mods",
         "resourcepacks",
@@ -42,41 +31,28 @@ def scan_files(pack_path: Path):
 
 
     for folder in folders:
-
         current = pack_path / folder
-
         if not current.exists():
             continue
 
-
         for file in current.rglob("*"):
-
             if not file.is_file():
                 continue
 
-
             relative = file.relative_to(pack_path)
 
-
             result[str(relative)] = ManifestFile(
-
                 name=file.name,
-
                 path=str(relative),
-
                 sha256=sha256(file),
-
                 size=file.stat().st_size
-
             )
 
     return result
 
 
 def load_manifest(pack_path: Path):
-
     file = pack_path / MANIFEST_NAME
-
     if not file.exists():
         return None
 
@@ -102,16 +78,13 @@ def save_manifest(pack_path: Path, manifest: ServerManifest):
 
 def build_manifest(
     pack_path: Path,
-    minecraft: MinecraftInfo,
     servers
 ):
-
     old = load_manifest(pack_path)
 
     files = scan_files(pack_path)
 
     removed = {}
-
     version = 1
 
     if old:
@@ -123,6 +96,7 @@ def build_manifest(
         # сравнение старого и нового
         for path, old_file in old.files.items():
 
+            # файл полностью удалили
             if path not in files:
 
                 removed.setdefault(path, [])
@@ -132,8 +106,10 @@ def build_manifest(
 
                 continue
 
+
             new_file = files[path]
 
+            # файл изменился
             if new_file.sha256 != old_file.sha256:
 
                 removed.setdefault(path, [])
@@ -141,18 +117,37 @@ def build_manifest(
                 if old_file.sha256 not in removed[path]:
                     removed[path].append(old_file.sha256)
 
+
+    #
+    # Очистка removed
+    #
+    # если sha256 снова существует среди актуальных файлов,
+    # он больше не является удалённым
+    #
+
+    for path, hashes in list(removed.items()):
+
+        if path in files:
+
+            current_hash = files[path].sha256
+
+            removed[path] = [
+                h for h in hashes
+                if h != current_hash
+            ]
+
+
+        # если список пустой - удалить запись
+        if not removed[path]:
+
+            del removed[path]
+
+
     manifest = ServerManifest(
-
         version=version,
-
-        minecraft=minecraft,
-
         files=files,
-
         removed=removed,
-
         servers=servers
-
     )
 
     save_manifest(pack_path, manifest)

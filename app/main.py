@@ -77,31 +77,11 @@ def build(pack: str):
             "Pack not found"
         )
 
-    #
-    # Пока захардкодим.
-    # Потом будет читаться из instance.json
-    #
-
-    minecraft = MinecraftInfo(
-
-        version="1.21.1",
-
-        loader="fabric",
-
-        loader_version="0.17.2"
-
-    )
-
     servers = []
 
     manifest = build_manifest(
-
         pack_path,
-
-        minecraft,
-
         servers
-
     )
 
     save_manifest(
