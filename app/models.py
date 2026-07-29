@@ -1,13 +1,14 @@
 from typing import Dict, List
 from pydantic import BaseModel, Field
 
-# ---------- Minecraft ----------
+# ---------- Download ----------
 
 
-class MinecraftInfo(BaseModel):
-    version: str
-    loader: str
-    loader_version: str
+class DownloadFile(BaseModel):
+    path: str
+    sha256: str
+    size: int
+    url: str
 
 
 # ---------- File ----------
@@ -44,16 +45,6 @@ class ServerManifest(BaseModel):
 class ClientManifest(BaseModel):
     files: Dict[str, ManifestFile]
     servers: List[ServerInfo] = Field(default_factory=list)
-
-
-# ---------- Download ----------
-
-
-class DownloadFile(BaseModel):
-    path: str
-    sha256: str
-    size: int
-    url: str
 
 
 # ---------- Update ----------

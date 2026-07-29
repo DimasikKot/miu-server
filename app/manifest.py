@@ -58,52 +58,52 @@ def save_manifest(pack_path: Path, manifest: ServerManifest):
 
 
 def build_manifest(pack_path: Path, servers):
-    old = load_manifest(pack_path)
-    files = scan_files(pack_path)
+    old_manifest = load_manifest(pack_path)
+    new_files = scan_files(pack_path)
 
     removed = {}
     version = 1
 
-    if old:
-        version = old.version + 1
-        removed = old.removed.copy()
+    if old_manifest:
+        version = old_manifest.version + 1
+        removed = old_manifest.removed.copy()
 
         # сравнение старого и нового
-        for path, old_file in old.files.items():
+        for old_path, old_file in old_manifest.files.items():
 
             # файл полностью удалили
-            if path not in files:
-                removed.setdefault(path, [])
-                if old_file.sha256 not in removed[path]:
-                    removed[path].append(old_file.sha256)
+            if old_path not in new_files:
+                removed.setdefault(old_path, [])
+                if old_file.sha256 not in removed[old_path]:
+                    removed[old_path].append(old_file.sha256)
                 continue
 
             # новый файл
-            new_file = files[path]
+            new_file = new_files[old_path]
 
             # файл изменился
             if new_file.sha256 != old_file.sha256:
-                removed.setdefault(path, [])
-                if old_file.sha256 not in removed[path]:
-                    removed[path].append(old_file.sha256)
+                removed.setdefault(old_path, [])
+                if old_file.sha256 not in removed[old_path]:
+                    removed[old_path].append(old_file.sha256)
 
     # Очистка removed
 
     # если sha256 снова существует среди актуальных файлов,
     # он больше не является удалённым
-    for path, hashes in list(removed.items()):
-        if path in files:
-            current_hash = files[path].sha256
-            removed[path] = [h for h in hashes if h != current_hash]
+    for old_path, old_hashes in list(removed.items()):
+        if old_path in new_files:
+            current_hash = new_files[old_path].sha256
+            removed[old_path] = [h for h in old_hashes if h != current_hash]
 
         # если список пустой - удалить запись
-        if not removed[path]:
-            del removed[path]
+        if not removed[old_path]:
+            del removed[old_path]
 
-    manifest = ServerManifest(
-        version=version, files=files, removed=removed, servers=servers
+    new_manifest = ServerManifest(
+        version=version, files=new_files, removed=removed, servers=servers
     )
 
-    save_manifest(pack_path, manifest)
+    save_manifest(pack_path, new_manifest)
 
-    return manifest
+    return new_manifest
