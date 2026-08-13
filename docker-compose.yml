@@ -1,15 +1,9 @@
 services:
-
   updater:
-
     build: .
-
-    container_name: minecraft-updater
-
+    container_name: purmur-instances
     restart: unless-stopped
-
     ports:
       - "10033:10033"
-
     volumes:
-      - ./files:/files
+      - ./istances:/istances

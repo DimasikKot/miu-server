@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from models import ManifestFile, ServerManifest
+from models import File, ManifestServer
 
 MANIFEST_NAME = "manifest.json"
 
@@ -38,7 +38,7 @@ def scan_files(instance_path: Path):
 
             relative = file.relative_to(instance_path)
 
-            result[str(relative)] = ManifestFile(
+            result[str(relative)] = File(
                 name=file.name,
                 path=str(relative),
                 sha256=sha256(file),
@@ -77,10 +77,10 @@ def load_manifest(instance_path: Path):
         return None
 
     with open(file, encoding="utf-8") as f:
-        return ServerManifest.model_validate(json.load(f))
+        return ManifestServer.model_validate(json.load(f))
 
 
-def save_manifest(instance_path: Path, manifest: ServerManifest):
+def save_manifest(instance_path: Path, manifest: ManifestServer):
     with open(instance_path / MANIFEST_NAME, "w", encoding="utf-8") as f:
         json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
 
@@ -93,7 +93,7 @@ def build_manifest(instance_path: Path):
         new_pack = None
     else:
         with open(new_pack, encoding="utf-8") as f:
-            new_pack = ManifestFile(
+            new_pack = File(
                 name=new_pack.name,
                 path=str(new_pack.relative_to(instance_path)),
                 sha256=sha256(new_pack),
@@ -105,7 +105,7 @@ def build_manifest(instance_path: Path):
         new_instance = None
     else:
         with open(new_instance, encoding="utf-8") as f:
-            new_instance = ManifestFile(
+            new_instance = File(
                 name=new_instance.name,
                 path=str(new_instance.relative_to(instance_path)),
                 sha256=sha256(new_instance),
@@ -156,7 +156,7 @@ def build_manifest(instance_path: Path):
         if not removed[old_path]:
             del removed[old_path]
 
-    new_manifest = ServerManifest(
+    new_manifest = ManifestServer(
         version=version,
         pack=new_pack,
         instance=new_instance,

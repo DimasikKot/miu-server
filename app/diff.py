@@ -2,22 +2,22 @@ from typing import List
 from urllib.parse import quote
 
 from models import (
-    ClientManifest,
-    DownloadFile,
-    ServerInfo,
-    ServerManifest,
+    ManifestClient,
+    FileDownload,
+    Server,
+    ManifestServer,
     UpdateResponse,
 )
 
 
-def is_removed(path: str, sha256: str, server_manifest: ServerManifest) -> bool:
+def is_removed(path: str, sha256: str, server_manifest: ManifestServer) -> bool:
     # Проверяет, считается ли данный SHA удалённым
     removed = server_manifest.removed.get(path, {})
     return sha256 in removed
 
 
 def build_delete_list(
-    client_manifest: ClientManifest, server_manifest: ServerManifest
+    client_manifest: ManifestClient, server_manifest: ManifestServer
 ) -> List[str]:
     delete = []
     for client_path, client_file in client_manifest.files.items():
@@ -38,11 +38,11 @@ def build_delete_list(
 
 
 def build_download_list(
-    client_manifest: ClientManifest,
-    server_manifest: ServerManifest,
+    client_manifest: ManifestClient,
+    server_manifest: ManifestServer,
     instance: str,
     base_url: str,
-) -> List[DownloadFile]:
+) -> List[FileDownload]:
     download = []
 
     client_pack = client_manifest.pack
@@ -52,11 +52,11 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            DownloadFile(
+            FileDownload(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
-                url=f"{base_url}/files/"
+                url=f"{base_url}/istances/"
                 f"{quote(instance)}/"
                 f"{quote(server_pack.path, safe='/')}",
             )
@@ -69,11 +69,11 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            DownloadFile(
+            FileDownload(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
-                url=f"{base_url}/files/"
+                url=f"{base_url}/istances/"
                 f"{quote(instance)}/"
                 f"{quote(server_instance.path, safe='/')}",
             )
@@ -85,12 +85,12 @@ def build_download_list(
         # Нет файла
         if server_path not in client_manifest.files:
             url = (
-                f"{base_url}/files/"
+                f"{base_url}/istances/"
                 f"{quote(instance)}/"
                 f"{quote(server_path, safe='/')}"
             )
             download.append(
-                DownloadFile(
+                FileDownload(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
@@ -109,11 +109,11 @@ def build_download_list(
         strict_folders = ["minecraft/mods"]
         if any(server_path.startswith(folder) for folder in strict_folders):
             download.append(
-                DownloadFile(
+                FileDownload(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
-                    url=f"{base_url}/files/"
+                    url=f"{base_url}/istances/"
                     f"{quote(instance)}/"
                     f"{quote(server_path, safe='/')}",
                 )
@@ -123,8 +123,8 @@ def build_download_list(
 
 
 def compare_servers(
-    client_servers: List[ServerInfo], server_servers: List[ServerInfo]
-) -> List[ServerInfo]:
+    client_servers: List[Server], server_servers: List[Server]
+) -> List[Server]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
     result = list(client_servers)
 
@@ -166,8 +166,8 @@ def compare_resource_packs(
 
 def compare(
     instance: str,
-    client_manifest: ClientManifest,
-    server_manifest: ServerManifest,
+    client_manifest: ManifestClient,
+    server_manifest: ManifestServer,
     base_url: str,
 ) -> UpdateResponse:
     download = build_download_list(client_manifest, server_manifest, instance, base_url)

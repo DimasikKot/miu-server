@@ -4,20 +4,27 @@ from fastapi import HTTPException
 from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
-from models import ClientManifest
+from models import ManifestClient
 from manifest import build_manifest, load_manifest, save_manifest
 from diff import compare
 
-FILES_DIR_PATH = Path("/files")
+FILES_DIR_PATH = Path("/istances")
 
 
-app = FastAPI(title="Minecraft Updater", version="1.0.0")
-app.mount("/files", StaticFiles(directory=FILES_DIR_PATH), name="files")
+app = FastAPI(title="PurMur Instances", version="1.1.0")
+app.mount("/istances", StaticFiles(directory=FILES_DIR_PATH), name="istances")
 
 
-@app.get("/")
-def root():
-    return {"status": "ok"}
+@app.post("/build/{instance}")
+def build(instance: str):
+    instance_path = FILES_DIR_PATH / instance
+    if not instance_path.exists():
+        raise HTTPException(404, "Instance not found")
+
+    manifest = build_manifest(instance_path)
+    save_manifest(instance_path, manifest)
+
+    return {"status": "success", "version": manifest.version}
 
 
 @app.get("/manifest/{instance}")
@@ -33,20 +40,8 @@ def manifest(instance: str):
     return manifest
 
 
-@app.post("/build/{instance}")
-def build(instance: str):
-    instance_path = FILES_DIR_PATH / instance
-    if not instance_path.exists():
-        raise HTTPException(404, "Instance not found")
-
-    manifest = build_manifest(instance_path)
-    save_manifest(instance_path, manifest)
-
-    return {"status": "success", "version": manifest.version}
-
-
 @app.post("/update/{instance}")
-def update(instance: str, client_manifest: ClientManifest, request: Request):
+def update(instance: str, client_manifest: ManifestClient, request: Request):
     instance_path = FILES_DIR_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
@@ -55,6 +50,8 @@ def update(instance: str, client_manifest: ClientManifest, request: Request):
     if server_manifest is None:
         raise HTTPException(500, "Manifest missing")
 
-    result = compare(instance, client_manifest, server_manifest, str(request.base_url).rstrip("/"))
+    result = compare(
+        instance, client_manifest, server_manifest, str(request.base_url).rstrip("/")
+    )
 
     return result
