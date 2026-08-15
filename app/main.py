@@ -27,21 +27,8 @@ def build(instance: str):
     return {"status": "success", "version": manifest.version}
 
 
-@app.get("/manifest/{instance}")
-def manifest(instance: str):
-    path = FILES_DIR_PATH / instance
-    if not path.exists():
-        raise HTTPException(404, "Instance not found")
-
-    manifest = load_manifest(path)
-    if manifest is None:
-        raise HTTPException(404, "Manifest not found")
-
-    return manifest
-
-
 @app.post("/update/{instance}")
-def update(instance: str, client_manifest: ManifestClient, request: Request):
+def update(instance: str, manifest_client: ManifestClient, request: Request):
     instance_path = FILES_DIR_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
@@ -51,7 +38,7 @@ def update(instance: str, client_manifest: ManifestClient, request: Request):
         raise HTTPException(500, "Manifest missing")
 
     result = compare(
-        instance, client_manifest, server_manifest, str(request.base_url).rstrip("/")
+        instance, manifest_client, server_manifest, str(request.base_url).rstrip("/")
     )
 
     return result

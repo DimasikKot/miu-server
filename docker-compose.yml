@@ -1,7 +1,7 @@
 services:
   updater:
     build: .
-    container_name: purmur-instances
+    container_name: miu-server
     restart: unless-stopped
     ports:
       - "10033:10033"
