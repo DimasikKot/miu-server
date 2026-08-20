@@ -7,6 +7,6 @@ from ServerInfo import ServerInfo
 
 
 class UpdateRequest(BaseModel):
-    resourcepacks: List[str] = Field(default_factory=list)
+    resourcepacks: Dict[str] = Field(default_factory=dict)
     servers: List[ServerInfo] = Field(default_factory=list)
-    files: Dict[str, FileInfo]
+    files: Dict[FileInfo] = Field(default_factory=dict)
