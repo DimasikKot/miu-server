@@ -1,23 +1,21 @@
 from typing import List
 from urllib.parse import quote
 
-from models import (
-    ManifestClient,
-    FileDownload,
-    Server,
-    ManifestServer,
-    UpdateResponse,
-)
+from app.models.FileDownloadInfo import FileDownloadInfo
+from app.models.InstanceManifest import InstanceManifest
+from app.models.ServerInfo import ServerInfo
+from app.models.UpdateRequest import UpdateRequest
+from app.models.UpdateResponse import UpdateResponse
 
 
-def is_removed(path: str, sha256: str, server_manifest: ManifestServer) -> bool:
+def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
     # Проверяет, считается ли данный SHA удалённым
     removed = server_manifest.removed.get(path, {})
     return sha256 in removed
 
 
 def build_delete_list(
-    client_manifest: ManifestClient, server_manifest: ManifestServer
+    client_manifest: UpdateRequest, server_manifest: InstanceManifest
 ) -> List[str]:
     delete = []
     for client_path, client_file in client_manifest.files.items():
@@ -38,11 +36,11 @@ def build_delete_list(
 
 
 def build_download_list(
-    client_manifest: ManifestClient,
-    server_manifest: ManifestServer,
+    client_manifest: UpdateRequest,
+    server_manifest: InstanceManifest,
     instance: str,
     base_url: str,
-) -> List[FileDownload]:
+) -> List[FileDownloadInfo]:
     download = []
 
     client_pack = client_manifest.pack
@@ -52,7 +50,7 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            FileDownload(
+            FileDownloadInfo(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
@@ -69,7 +67,7 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            FileDownload(
+            FileDownloadInfo(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
@@ -90,7 +88,7 @@ def build_download_list(
                 f"{quote(server_path, safe='/')}"
             )
             download.append(
-                FileDownload(
+                FileDownloadInfo(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
@@ -109,7 +107,7 @@ def build_download_list(
         strict_folders = ["minecraft/mods"]
         if any(server_path.startswith(folder) for folder in strict_folders):
             download.append(
-                FileDownload(
+                FileDownloadInfo(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
@@ -123,8 +121,8 @@ def build_download_list(
 
 
 def compare_servers(
-    client_servers: List[Server], server_servers: List[Server]
-) -> List[Server]:
+    client_servers: List[ServerInfo], server_servers: List[ServerInfo]
+) -> List[ServerInfo]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
     result = list(client_servers)
 
@@ -166,8 +164,8 @@ def compare_resource_packs(
 
 def compare(
     instance: str,
-    client_manifest: ManifestClient,
-    server_manifest: ManifestServer,
+    client_manifest: UpdateRequest,
+    server_manifest: InstanceManifest,
     base_url: str,
 ) -> UpdateResponse:
     download = build_download_list(client_manifest, server_manifest, instance, base_url)

@@ -4,20 +4,23 @@ from fastapi import HTTPException
 from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
-from models import ManifestClient
+
+from models.UpdateRequest import UpdateRequest
 from manifest import build_manifest, load_manifest, save_manifest
 from diff import compare
 
-FILES_DIR_PATH = Path("/istances")
+MANIFEST_NAME = "manifest.json"
+
+INSTANCES_FOLDER_PATH = Path("/istances")
 
 
 app = FastAPI(title="PurMur Instances", version="1.1.0")
-app.mount("/istances", StaticFiles(directory=FILES_DIR_PATH), name="istances")
+app.mount("/istances", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="istances")
 
 
 @app.post("/build/{instance}")
 def build(instance: str):
-    instance_path = FILES_DIR_PATH / instance
+    instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 
@@ -28,8 +31,8 @@ def build(instance: str):
 
 
 @app.post("/update/{instance}")
-def update(instance: str, manifest_client: ManifestClient, request: Request):
-    instance_path = FILES_DIR_PATH / instance
+def update(instance: str, manifest_client: UpdateRequest, request: Request):
+    instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 

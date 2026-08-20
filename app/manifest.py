@@ -2,9 +2,10 @@ import hashlib
 import json
 from pathlib import Path
 
-from models import File, ManifestServer
+from fastapi import File
 
-MANIFEST_NAME = "manifest.json"
+from app.main import MANIFEST_NAME
+from models.InstanceManifest import InstanceManifest
 
 
 def sha256(path: Path) -> str:
@@ -77,10 +78,10 @@ def load_manifest(instance_path: Path):
         return None
 
     with open(file, encoding="utf-8") as f:
-        return ManifestServer.model_validate(json.load(f))
+        return InstanceManifest.model_validate(json.load(f))
 
 
-def save_manifest(instance_path: Path, manifest: ManifestServer):
+def save_manifest(instance_path: Path, manifest: InstanceManifest):
     with open(instance_path / MANIFEST_NAME, "w", encoding="utf-8") as f:
         json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
 
@@ -156,7 +157,7 @@ def build_manifest(instance_path: Path):
         if not removed[old_path]:
             del removed[old_path]
 
-    new_manifest = ManifestServer(
+    new_manifest = InstanceManifest(
         version=version,
         pack=new_pack,
         instance=new_instance,
