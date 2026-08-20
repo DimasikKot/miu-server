@@ -2,8 +2,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from main import MANIFEST_NAME
-from app.models.FileInfo import FileInfo
+from router import MANIFEST_NAME
+from models.FileInfo import FileInfo
 from models.InstanceManifest import InstanceManifest
 
 

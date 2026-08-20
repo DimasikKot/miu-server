@@ -10,7 +10,6 @@ from manifest import build_manifest, load_manifest, save_manifest
 from diff import compare
 
 MANIFEST_NAME = "manifest.json"
-
 INSTANCES_FOLDER_PATH = Path("/istances")
 
 

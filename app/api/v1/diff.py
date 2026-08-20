@@ -1,22 +1,23 @@
 from typing import List
 from urllib.parse import quote
 
-from main import INSTANCES_FOLDER_PATH
-from models.FileDownloadInfo import FileDownloadInfo
-from models.InstanceManifest import InstanceManifest
-from models.ServerInfo import ServerInfo
-from models.UpdateRequest import UpdateRequest
-from models.UpdateResponse import UpdateResponse
+from models import (
+    ClientManifest,
+    DownloadFile,
+    ServerInfo,
+    ServerManifest,
+    UpdateResponse,
+)
 
 
-def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
+def is_removed(path: str, sha256: str, server_manifest: ServerManifest) -> bool:
     # Проверяет, считается ли данный SHA удалённым
     removed = server_manifest.removed.get(path, {})
     return sha256 in removed
 
 
 def build_delete_list(
-    client_manifest: UpdateRequest, server_manifest: InstanceManifest
+    client_manifest: ClientManifest, server_manifest: ServerManifest
 ) -> List[str]:
     delete = []
     for client_path, client_file in client_manifest.files.items():
@@ -37,11 +38,11 @@ def build_delete_list(
 
 
 def build_download_list(
-    client_manifest: UpdateRequest,
-    server_manifest: InstanceManifest,
+    client_manifest: ClientManifest,
+    server_manifest: ServerManifest,
     instance: str,
     base_url: str,
-) -> List[FileDownloadInfo]:
+) -> List[DownloadFile]:
     download = []
 
     client_pack = client_manifest.pack
@@ -51,11 +52,11 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            FileDownloadInfo(
+            DownloadFile(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
-                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                url=f"{base_url}/files/"
                 f"{quote(instance)}/"
                 f"{quote(server_pack.path, safe='/')}",
             )
@@ -68,11 +69,11 @@ def build_download_list(
     ):
         # SHA отличается или файл отсутствует у клиента
         download.append(
-            FileDownloadInfo(
+            DownloadFile(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
-                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                url=f"{base_url}/files/"
                 f"{quote(instance)}/"
                 f"{quote(server_instance.path, safe='/')}",
             )
@@ -84,12 +85,12 @@ def build_download_list(
         # Нет файла
         if server_path not in client_manifest.files:
             url = (
-                f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                f"{base_url}/files/"
                 f"{quote(instance)}/"
                 f"{quote(server_path, safe='/')}"
             )
             download.append(
-                FileDownloadInfo(
+                DownloadFile(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
@@ -108,11 +109,11 @@ def build_download_list(
         strict_folders = ["minecraft/mods"]
         if any(server_path.startswith(folder) for folder in strict_folders):
             download.append(
-                FileDownloadInfo(
+                DownloadFile(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
-                    url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                    url=f"{base_url}/files/"
                     f"{quote(instance)}/"
                     f"{quote(server_path, safe='/')}",
                 )
@@ -165,8 +166,8 @@ def compare_resource_packs(
 
 def compare(
     instance: str,
-    client_manifest: UpdateRequest,
-    server_manifest: InstanceManifest,
+    client_manifest: ClientManifest,
+    server_manifest: ServerManifest,
     base_url: str,
 ) -> UpdateResponse:
     download = build_download_list(client_manifest, server_manifest, instance, base_url)

@@ -2,8 +2,8 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from models.FileDownloadInfo import FileDownloadInfo
-from models.ServerInfo import ServerInfo
+from FileDownloadInfo import FileDownloadInfo
+from ServerInfo import ServerInfo
 
 
 class UpdateResponse(BaseModel):
