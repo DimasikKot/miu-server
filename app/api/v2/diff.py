@@ -1,12 +1,12 @@
 from typing import List
 from urllib.parse import quote
 
-from router import INSTANCES_FOLDER_PATH
-from models.FileDownloadInfo import FileDownloadInfo
-from models.InstanceManifest import InstanceManifest
-from models.ServerInfo import ServerInfo
-from models.UpdatePostRequest import UpdatePostRequest
-from models.UpdatePostResponse import UpdatePostResponse
+from app.api.v2.models.FileDownloadInfo import FileDownloadInfo
+from app.api.v2.models.ServerInfo import ServerInfo
+from app.api.v2.models.UpdatePostRequest import UpdatePostRequest
+from app.api.v2.models.UpdatePostResponse import UpdatePostResponse
+from app.api.v2.models.server.InstanceManifest import InstanceManifest
+from app.api.v2.router import INSTANCES_FOLDER_PATH
 
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:

@@ -5,9 +5,9 @@ from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
 
-from models.UpdatePostRequest import UpdatePostRequest
-from manifest import build_manifest, load_manifest, save_manifest
-from diff import compare
+from app.api.v2.models.UpdatePostRequest import UpdatePostRequest
+from app.api.v2.manifest import build_manifest, load_manifest, save_manifest
+from app.api.v2.diff import compare
 
 MANIFEST_NAME = "manifest.json"
 INSTANCES_FOLDER_PATH = Path("/istances")

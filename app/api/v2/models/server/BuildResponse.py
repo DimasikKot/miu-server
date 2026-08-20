@@ -2,8 +2,8 @@ from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from FileDownloadInfo import FileDownloadInfo
-from ServerInfo import ServerInfo
+from app.api.v2.models.FileDownloadInfo import FileDownloadInfo
+from app.api.v2.models.ServerInfo import ServerInfo
 
 
 class BuildResponse(BaseModel):

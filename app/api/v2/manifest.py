@@ -2,9 +2,9 @@ import hashlib
 import json
 from pathlib import Path
 
-from router import MANIFEST_NAME
-from models.FileInfo import FileInfo
-from models.InstanceManifest import InstanceManifest
+from app.api.v2.models.FileInfo import FileInfo
+from app.api.v2.models.server.InstanceManifest import InstanceManifest
+from app.api.v2.router import MANIFEST_NAME
 
 
 def sha256(path: Path) -> str:
