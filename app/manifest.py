@@ -2,9 +2,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from fastapi import File
-
-from app.main import MANIFEST_NAME
+from main import MANIFEST_NAME
+from models.FileInfo import FileInfo
 from models.InstanceManifest import InstanceManifest
 
 
@@ -39,7 +38,7 @@ def scan_files(instance_path: Path):
 
             relative = file.relative_to(instance_path)
 
-            result[str(relative)] = File(
+            result[str(relative)] = FileInfo(
                 name=file.name,
                 path=str(relative),
                 sha256=sha256(file),
@@ -94,7 +93,7 @@ def build_manifest(instance_path: Path):
         new_pack = None
     else:
         with open(new_pack, encoding="utf-8") as f:
-            new_pack = File(
+            new_pack = FileInfo(
                 name=new_pack.name,
                 path=str(new_pack.relative_to(instance_path)),
                 sha256=sha256(new_pack),
@@ -106,7 +105,7 @@ def build_manifest(instance_path: Path):
         new_instance = None
     else:
         with open(new_instance, encoding="utf-8") as f:
-            new_instance = File(
+            new_instance = FileInfo(
                 name=new_instance.name,
                 path=str(new_instance.relative_to(instance_path)),
                 sha256=sha256(new_instance),

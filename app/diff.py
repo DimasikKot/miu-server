@@ -1,11 +1,12 @@
 from typing import List
 from urllib.parse import quote
 
-from app.models.FileDownloadInfo import FileDownloadInfo
-from app.models.InstanceManifest import InstanceManifest
-from app.models.ServerInfo import ServerInfo
-from app.models.UpdateRequest import UpdateRequest
-from app.models.UpdateResponse import UpdateResponse
+from main import INSTANCES_FOLDER_PATH
+from models.FileDownloadInfo import FileDownloadInfo
+from models.InstanceManifest import InstanceManifest
+from models.ServerInfo import ServerInfo
+from models.UpdateRequest import UpdateRequest
+from models.UpdateResponse import UpdateResponse
 
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
@@ -54,7 +55,7 @@ def build_download_list(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
-                url=f"{base_url}/istances/"
+                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_pack.path, safe='/')}",
             )
@@ -71,7 +72,7 @@ def build_download_list(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
-                url=f"{base_url}/istances/"
+                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_instance.path, safe='/')}",
             )
@@ -83,7 +84,7 @@ def build_download_list(
         # Нет файла
         if server_path not in client_manifest.files:
             url = (
-                f"{base_url}/istances/"
+                f"{base_url}{INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_path, safe='/')}"
             )
@@ -111,7 +112,7 @@ def build_download_list(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
-                    url=f"{base_url}/istances/"
+                    url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
                     f"{quote(instance)}/"
                     f"{quote(server_path, safe='/')}",
                 )
