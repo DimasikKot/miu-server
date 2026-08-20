@@ -11,7 +11,7 @@ from config import settings
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
     # Проверяет, считается ли данный SHA удалённым
-    removed = server_manifest.removed.get(path, {})
+    removed = server_manifest.deleted.get(path, {})
     return sha256 in removed
 
 

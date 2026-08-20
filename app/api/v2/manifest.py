@@ -122,7 +122,7 @@ def build_manifest(instance_path: Path):
 
     if old_manifest:
         version = old_manifest.version + 1
-        removed = old_manifest.removed.copy()
+        removed = old_manifest.deleted.copy()
 
         # сравнение старого и нового
         for old_path, old_file in old_manifest.files.items():
@@ -161,7 +161,7 @@ def build_manifest(instance_path: Path):
         pack=new_pack,
         instance=new_instance,
         files=new_files,
-        removed=removed,
+        deleted=removed,
         servers=new_servers,
         resource_packs=new_resource_packs,
     )
