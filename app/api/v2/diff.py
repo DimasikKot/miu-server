@@ -5,8 +5,8 @@ from router import INSTANCES_FOLDER_PATH
 from models.FileDownloadInfo import FileDownloadInfo
 from models.InstanceManifest import InstanceManifest
 from models.ServerInfo import ServerInfo
-from models.UpdateRequest import UpdateRequest
-from models.UpdateResponse import UpdateResponse
+from models.UpdatePostRequest import UpdatePostRequest
+from models.UpdatePostResponse import UpdatePostResponse
 
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
@@ -16,7 +16,7 @@ def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> boo
 
 
 def build_delete_list(
-    client_manifest: UpdateRequest, server_manifest: InstanceManifest
+    client_manifest: UpdatePostRequest, server_manifest: InstanceManifest
 ) -> List[str]:
     delete = []
     for client_path, client_file in client_manifest.files.items():
@@ -37,7 +37,7 @@ def build_delete_list(
 
 
 def build_download_list(
-    client_manifest: UpdateRequest,
+    client_manifest: UpdatePostRequest,
     server_manifest: InstanceManifest,
     instance: str,
     base_url: str,
@@ -165,14 +165,14 @@ def compare_resource_packs(
 
 def compare(
     instance: str,
-    client_manifest: UpdateRequest,
+    client_manifest: UpdatePostRequest,
     server_manifest: InstanceManifest,
     base_url: str,
-) -> UpdateResponse:
+) -> UpdatePostResponse:
     download = build_download_list(client_manifest, server_manifest, instance, base_url)
     delete = build_delete_list(client_manifest, server_manifest)
 
-    return UpdateResponse(
+    return UpdatePostResponse(
         version=server_manifest.version,
         download=download,
         delete=delete,

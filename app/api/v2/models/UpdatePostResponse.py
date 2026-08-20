@@ -6,7 +6,7 @@ from FileDownloadInfo import FileDownloadInfo
 from ServerInfo import ServerInfo
 
 
-class UpdateResponse(BaseModel):
+class UpdatePostResponse(BaseModel):
     new_resourcepacks: Dict[str] = Field(default_factory=dict)
     new_servers: List[ServerInfo] = Field(default_factory=list)
     need_delete: Dict[str] = Field(default_factory=dict)

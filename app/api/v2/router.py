@@ -5,7 +5,7 @@ from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
 
-from models.UpdateRequest import UpdateRequest
+from models.UpdatePostRequest import UpdatePostRequest
 from manifest import build_manifest, load_manifest, save_manifest
 from diff import compare
 
@@ -30,7 +30,7 @@ def build(instance: str):
 
 
 @app.post("/update/{instance}")
-def update(instance: str, manifest_client: UpdateRequest, request: Request):
+def update(instance: str, manifest_client: UpdatePostRequest, request: Request):
     instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
