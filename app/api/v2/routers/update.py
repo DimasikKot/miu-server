@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from app.api.v2.diff import compare
-from app.api.v2.manifest import load_manifest
-from app.api.v2.models.UpdatePostRequest import UpdatePostRequest
-from app.api.v2.models.UpdatePostResponse import UpdatePostResponse
-from app.main import INSTANCES_FOLDER_PATH
+from api.v2.diff import compare
+from api.v2.manifest import load_manifest
+from api.v2.models.UpdatePostRequest import UpdatePostRequest
+from api.v2.models.UpdatePostResponse import UpdatePostResponse
+from main import INSTANCES_FOLDER_PATH
 
 router_update: APIRouter = APIRouter()
 

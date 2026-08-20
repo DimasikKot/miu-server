@@ -2,8 +2,8 @@ from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
-from app.api.v2.models.FileInfo import FileInfo
-from app.api.v2.models.ServerInfo import ServerInfo
+from api.v2.models.FileInfo import FileInfo
+from api.v2.models.ServerInfo import ServerInfo
 
 
 class InstanceManifest(BaseModel):

@@ -1,7 +1,7 @@
 services:
-  updater:
+  backend:
     build: .
-    container_name: miu-server
+    container_name: backend
     restart: unless-stopped
     ports:
       - "10033:10033"

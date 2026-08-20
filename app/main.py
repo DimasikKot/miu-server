@@ -2,13 +2,14 @@ from pathlib import Path
 from fastapi import FastAPI
 
 from fastapi.staticfiles import StaticFiles
-from app.api.v1.router_v1 import router_v1
-from app.api.v2.routers.endpoints import router_v2
+
+from api.v1.endpoints import router_v1
+from api.v2.routers.endpoints import router_v2
 
 MANIFEST_NAME = "manifest.json"
 INSTANCES_FOLDER_PATH = Path("/istances")
 
-app = FastAPI(title="PurMur Instances", version="1.1.0")
+app = FastAPI(title="PurMur Instances", version="2.0.0")
 app.mount("/istances", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="istances")
 
 # # Разрешённые источники
@@ -28,5 +29,5 @@ app.mount("/istances", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="istan
 # )
 
 # Подключение всех версий API
-app.include_router(router_v1)
-app.include_router(router_v2, prefix="/api/v2")
+app.include_router(router_v1, tags=["V1"])
+app.include_router(router_v2, prefix="/api/v2", tags=["V2"])

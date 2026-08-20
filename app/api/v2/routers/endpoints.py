@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.api.v2.routers.build import router_build
-from app.api.v2.routers.update import router_update
+from api.v2.routers.build import router_build
+from api.v2.routers.update import router_update
 
 router_v2: APIRouter = APIRouter()
 

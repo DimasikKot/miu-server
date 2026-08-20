@@ -1,20 +1,14 @@
-from pathlib import Path
-from fastapi import FastAPI
-from fastapi import HTTPException
-from fastapi import Request
+from fastapi import APIRouter, HTTPException, Request
 
-from fastapi.staticfiles import StaticFiles
+from api.v1.models import ClientManifest
+from api.v1.manifest import build_manifest, load_manifest, save_manifest
+from api.v1.diff import compare
+from main import INSTANCES_FOLDER_PATH
 
-from app.api.v1.models import ClientManifest
-from app.api.v1.manifest import build_manifest, load_manifest, save_manifest
-from app.api.v1.diff import compare
-from app.main import INSTANCES_FOLDER_PATH
-
-app = FastAPI(title="Minecraft Updater", version="1.0.0")
-app.mount("/files", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="files")
+router_v1: APIRouter = APIRouter()
 
 
-@app.post("/build/{instance}")
+@router_v1.post("/build/{instance}")
 def build(instance: str):
     instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
@@ -26,7 +20,7 @@ def build(instance: str):
     return {"status": "success", "version": manifest.version}
 
 
-@app.post("/update/{instance}")
+@router_v1.post("/update/{instance}")
 def update(instance: str, client_manifest: ClientManifest, request: Request):
     instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():

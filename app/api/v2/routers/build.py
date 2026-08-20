@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from app.api.v2.manifest import build_manifest, save_manifest
-from app.main import INSTANCES_FOLDER_PATH
+from api.v2.manifest import build_manifest, save_manifest
+from main import INSTANCES_FOLDER_PATH
 
 router_build: APIRouter = APIRouter()
 

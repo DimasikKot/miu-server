@@ -1,7 +1,7 @@
 from typing import List
 from urllib.parse import quote
 
-from app.api.v1.models import (
+from api.v1.models import (
     ClientManifest,
     DownloadFile,
     ServerInfo,
