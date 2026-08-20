@@ -6,7 +6,7 @@ from app.api.v2.models.ServerInfo import ServerInfo
 from app.api.v2.models.UpdatePostRequest import UpdatePostRequest
 from app.api.v2.models.UpdatePostResponse import UpdatePostResponse
 from app.api.v2.models.server.InstanceManifest import InstanceManifest
-from app.api.v2.router import INSTANCES_FOLDER_PATH
+from app.main import INSTANCES_FOLDER_PATH
 
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:

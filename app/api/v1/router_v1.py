@@ -5,16 +5,13 @@ from fastapi import Request
 
 from fastapi.staticfiles import StaticFiles
 
-from app.api.v2.models.UpdatePostRequest import UpdatePostRequest
-from app.api.v2.manifest import build_manifest, load_manifest, save_manifest
-from app.api.v2.diff import compare
+from app.api.v1.models import ClientManifest
+from app.api.v1.manifest import build_manifest, load_manifest, save_manifest
+from app.api.v1.diff import compare
+from app.main import INSTANCES_FOLDER_PATH
 
-MANIFEST_NAME = "manifest.json"
-INSTANCES_FOLDER_PATH = Path("/istances")
-
-
-app = FastAPI(title="PurMur Instances", version="1.1.0")
-app.mount("/istances", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="istances")
+app = FastAPI(title="Minecraft Updater", version="1.0.0")
+app.mount("/files", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="files")
 
 
 @app.post("/build/{instance}")
@@ -30,7 +27,7 @@ def build(instance: str):
 
 
 @app.post("/update/{instance}")
-def update(instance: str, manifest_client: UpdatePostRequest, request: Request):
+def update(instance: str, client_manifest: ClientManifest, request: Request):
     instance_path = INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
@@ -40,7 +37,7 @@ def update(instance: str, manifest_client: UpdatePostRequest, request: Request):
         raise HTTPException(500, "Manifest missing")
 
     result = compare(
-        instance, manifest_client, server_manifest, str(request.base_url).rstrip("/")
+        instance, client_manifest, server_manifest, str(request.base_url).rstrip("/")
     )
 
     return result

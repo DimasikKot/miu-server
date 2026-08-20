@@ -2,9 +2,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from models import ManifestFile, ServerManifest
-
-MANIFEST_NAME = "manifest.json"
+from app.api.v1.models import ManifestFile, ServerManifest
+from app.main import MANIFEST_NAME
 
 
 def sha256(path: Path) -> str:
