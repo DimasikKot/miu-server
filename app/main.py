@@ -1,16 +1,15 @@
-from pathlib import Path
 from fastapi import FastAPI
 
 from fastapi.staticfiles import StaticFiles
 
 from api.v1.endpoints import router_v1
 from api.v2.routers.endpoints import router_v2
-
-MANIFEST_NAME = "manifest.json"
-INSTANCES_FOLDER_PATH = Path("/istances")
+from config import settings
 
 app = FastAPI(title="PurMur Instances", version="2.0.0")
-app.mount("/istances", StaticFiles(directory=INSTANCES_FOLDER_PATH), name="istances")
+app.mount(
+    "/istances", StaticFiles(directory=settings.INSTANCES_FOLDER_PATH), name="istances"
+)
 
 # # Разрешённые источники
 # origins: list[str] = [

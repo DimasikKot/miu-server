@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from api.v1.models import ManifestFile, ServerManifest
-from main import MANIFEST_NAME
+from config import settings
 
 
 def sha256(path: Path) -> str:
@@ -71,7 +71,7 @@ def get_resource_packs(minecraft_dir_path: Path) -> list[str]:
 
 
 def load_manifest(instance_path: Path):
-    file = instance_path / MANIFEST_NAME
+    file = instance_path / settings.MANIFEST_NAME
     if not file.exists():
         return None
 
@@ -80,7 +80,7 @@ def load_manifest(instance_path: Path):
 
 
 def save_manifest(instance_path: Path, manifest: ServerManifest):
-    with open(instance_path / MANIFEST_NAME, "w", encoding="utf-8") as f:
+    with open(instance_path / settings.MANIFEST_NAME, "w", encoding="utf-8") as f:
         json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
 
 

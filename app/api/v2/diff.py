@@ -6,7 +6,7 @@ from api.v2.models.ServerInfo import ServerInfo
 from api.v2.models.UpdatePostRequest import UpdatePostRequest
 from api.v2.models.UpdatePostResponse import UpdatePostResponse
 from api.v2.models.server.InstanceManifest import InstanceManifest
-from main import INSTANCES_FOLDER_PATH
+from config import settings
 
 
 def is_removed(path: str, sha256: str, server_manifest: InstanceManifest) -> bool:
@@ -55,7 +55,7 @@ def build_download_list(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
-                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_pack.path, safe='/')}",
             )
@@ -72,7 +72,7 @@ def build_download_list(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
-                url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_instance.path, safe='/')}",
             )
@@ -84,7 +84,7 @@ def build_download_list(
         # Нет файла
         if server_path not in client_manifest.files:
             url = (
-                f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_path, safe='/')}"
             )
@@ -112,7 +112,7 @@ def build_download_list(
                     path=server_path,
                     sha256=server_file.sha256,
                     size=server_file.size,
-                    url=f"{base_url}{INSTANCES_FOLDER_PATH}/"
+                    url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                     f"{quote(instance)}/"
                     f"{quote(server_path, safe='/')}",
                 )

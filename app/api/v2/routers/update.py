@@ -4,14 +4,14 @@ from api.v2.diff import compare
 from api.v2.manifest import load_manifest
 from api.v2.models.UpdatePostRequest import UpdatePostRequest
 from api.v2.models.UpdatePostResponse import UpdatePostResponse
-from main import INSTANCES_FOLDER_PATH
+from config import settings
 
 router_update: APIRouter = APIRouter()
 
 
 @router_update.post("/{instance}", response_model=UpdatePostResponse)
 def router_update(instance: str, data: UpdatePostRequest, request: Request):
-    instance_path = INSTANCES_FOLDER_PATH / instance
+    instance_path = settings.INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 
