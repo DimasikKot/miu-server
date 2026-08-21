@@ -208,16 +208,14 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
     save_manifest(instance_path, new_manifest)
 
     return new_manifest, BuildPostResponse(
-        version=version,
-        api_version=2,
-        new_files_paths=old_manifest.files_paths if old_manifest else set(),
-        new_dirs_paths=old_manifest.dirs_paths if old_manifest else set(),
-        new_strict_files_paths=(
-            old_manifest.strict_files_paths if old_manifest else set()
-        ),
-        new_strict_dirs_paths=old_manifest.strict_dirs_paths if old_manifest else set(),
-        new_resourcepacks=new_resourcepacks,
-        new_servers=new_servers,
+        version=new_manifest.version,
+        api_version=new_manifest.api_version,
+        new_files_paths=new_manifest.files_paths,
+        new_dirs_paths=new_manifest.dirs_paths,
+        new_strict_files_paths=new_manifest.strict_files_paths,
+        new_strict_dirs_paths=new_manifest.strict_dirs_paths,
+        new_resourcepacks=new_manifest.resourcepacks,
+        new_servers=new_manifest.servers,
         files_deleted=files_deleted,
         files_edited=files_edited,
         files_added=files_added,
