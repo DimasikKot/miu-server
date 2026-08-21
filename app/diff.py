@@ -1,11 +1,11 @@
 from urllib.parse import quote
 
-from api.v2.models.FileDownloadInfo import FileDownloadInfo
-from api.v2.models.ServerInfo import ServerInfo
-from api.v2.models.UpdatePostRequest import UpdatePostRequest
-from api.v2.models.UpdatePostResponse import UpdatePostResponse
-from api.v2.models.server.InstanceManifest import InstanceManifest
-from api.v2.models.ServerInfo import ServerInfo
+from models.FileDownloadInfo import FileDownloadInfo
+from models.ServerInfo import ServerInfo
+from models.UpdatePostRequest import UpdatePostRequest
+from models.UpdatePostResponse import UpdatePostResponse
+from models.server.InstanceManifest import InstanceManifest
+from models.ServerInfo import ServerInfo
 from config import settings
 
 
@@ -19,19 +19,21 @@ def build_delete_list(
     request: UpdatePostRequest, instance_manifest: InstanceManifest
 ) -> set[str]:
     delete: set[str] = set()
-    for client_path, client_file in request.files:
-
+    for request_file in request.files:
+        request_path = request_file.path
         # Если файла больше нет на сервере,
         # но его SHA находится в removed
-        if client_path not in instance_manifest.files:
-            if is_deleted(client_path, client_file.sha256, instance_manifest):
-                delete.append(client_path)
+        if request_path not in [
+            instance_file.path for instance_file in instance_manifest.files
+        ]:
+            if is_deleted(request_path, request_file.sha256, instance_manifest):
+                delete.add(request_path)
             continue
 
         # Если SHA клиента совпадает
         # с одним из старых SHA
-        if is_deleted(client_path, client_file.sha256, instance_manifest):
-            delete.append(client_path)
+        if is_deleted(request_path, request_file.sha256, instance_manifest):
+            delete.add(request_path)
 
     return delete
 
@@ -43,44 +45,45 @@ def build_download_list(
     base_url: str,
 ) -> list[FileDownloadInfo]:
     download: list[FileDownloadInfo] = []
+    request_files_paths = {file.path for file in request.files}
 
     # Проходим по всем файлам внутри Instance на сервере
-    for server_path, server_file in instance_manifest.files.items():
-
+    for instance_file in instance_manifest.files:
+        instance_path = instance_file.path
         # Нет файла
-        if server_path not in request.files:
+        if instance_path not in request_files_paths:
             url = (
                 f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance_name)}/"
-                f"{quote(server_path, safe='/')}"
+                f"{quote(instance_path, safe='/')}"
             )
             download.append(
                 FileDownloadInfo(
-                    path=server_path,
-                    sha256=server_file.sha256,
-                    size=server_file.size,
+                    path=instance_path,
+                    sha256=instance_file.sha256,
+                    size=instance_file.size,
                     url=url,
                 )
             )
             continue
 
-        client_file = request.files[server_path]
+        request_file = [file for file in request.files if file.path == instance_path][0]
 
         # SHA совпадает
-        if client_file.sha256 == server_file.sha256:
+        if request_file.sha256 == instance_file.sha256:
             continue
 
         # SHA отличается и это строгое место (моды)
         strict_folders = ["minecraft/mods"]
-        if any(server_path.startswith(folder) for folder in strict_folders):
+        if any(instance_path.startswith(folder) for folder in strict_folders):
             download.append(
                 FileDownloadInfo(
-                    path=server_path,
-                    sha256=server_file.sha256,
-                    size=server_file.size,
-                    url=f"{base_url}/files/"
+                    path=instance_path,
+                    sha256=instance_file.sha256,
+                    size=instance_file.size,
+                    url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                     f"{quote(instance_name)}/"
-                    f"{quote(server_path, safe='/')}",
+                    f"{quote(instance_path, safe='/')}",
                 )
             )
 
@@ -88,8 +91,8 @@ def build_download_list(
 
 
 def compare_servers(
-    request_servers: List[ServerInfo], instance_servers: List[ServerInfo]
-) -> List[ServerInfo]:
+    request_servers: list[ServerInfo], instance_servers: list[ServerInfo]
+) -> list[ServerInfo]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
     result = list(request_servers)
 

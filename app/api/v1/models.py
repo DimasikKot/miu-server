@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from api.v2.models.FileDownloadInfo import FileDownloadInfo
-from api.v2.models.ServerInfo import ServerInfo
+from models.FileDownloadInfo import FileDownloadInfo
+from models.ServerInfo import ServerInfo
 
 
 class ManifestFile(BaseModel):

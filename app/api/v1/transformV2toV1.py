@@ -1,7 +1,7 @@
 from api.v1.models import ClientManifest, ManifestFile, UpdateResponse
-from api.v2.models.FileInfo import FileInfo
-from api.v2.models.UpdatePostRequest import UpdatePostRequest
-from api.v2.models.UpdatePostResponse import UpdatePostResponse
+from models.FileInfo import FileInfo
+from models.UpdatePostRequest import UpdatePostRequest
+from models.UpdatePostResponse import UpdatePostResponse
 
 
 def FileInfoV2toV1(data: ManifestFile) -> FileInfo:

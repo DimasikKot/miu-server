@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from api.v2.models.server.BuildPostResponse import BuildPostResponse
+from models.server.BuildPostResponse import BuildPostResponse
 from config import settings
 from manifest import build_manifest, save_manifest
 

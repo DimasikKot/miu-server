@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from api.v2.models.UpdatePostRequest import UpdatePostRequest
-from api.v2.models.UpdatePostResponse import UpdatePostResponse
+from models.UpdatePostRequest import UpdatePostRequest
+from models.UpdatePostResponse import UpdatePostResponse
 from config import settings
 from diff import compare
 from manifest import load_manifest

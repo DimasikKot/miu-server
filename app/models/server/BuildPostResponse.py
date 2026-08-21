@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
-from api.v2.models.FileInfo import FileInfo
-from api.v2.models.ServerInfo import ServerInfo
+from models.ServerInfo import ServerInfo
 
 
 class BuildPostResponse(BaseModel):
@@ -12,5 +11,6 @@ class BuildPostResponse(BaseModel):
     new_strict_dirs_paths: set[str]
     new_resourcepacks: set[str]
     new_servers: list[ServerInfo]
-    new_deleted: dict[str, str]  # name: path
-    new_files: set[FileInfo]
+    files_deleted: dict[str, str]  # name: path
+    files_edited: dict[str, str]
+    files_added: dict[str, str]
