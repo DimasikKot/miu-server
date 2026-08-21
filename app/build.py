@@ -17,13 +17,13 @@ def load_manifest(instance_path: Path) -> InstanceManifest | None:
         return None
 
     with open(file, encoding="utf-8") as f:
-        json_manifest = json.load(f)
-        if json_manifest.get("api_version") is None:
-            manifest_v1 = ServerManifest.model_validate(json_manifest)
+        manifest_json = json.load(f)
+        if manifest_json.get("api_version") is None:
+            manifest_v1 = ServerManifest.model_validate(manifest_json)
             manifest_v2 = InstanceManifestV1toV2(data=manifest_v1)
             return InstanceManifest.model_validate(manifest_v2)
 
-        return InstanceManifest.model_validate(json.load(f))
+        return InstanceManifest.model_validate(manifest_json)
 
 
 def save_manifest(instance_path: Path, manifest: InstanceManifest):
@@ -139,6 +139,8 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
     version = 1
 
     if old_manifest:
+        version = old_manifest.version
+
         # файл полностью новый
         for new_file_path, new_file in new_files.items():
             if new_file_path not in old_manifest.files.keys():
