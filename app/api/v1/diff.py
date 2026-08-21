@@ -8,18 +8,19 @@ from api.v1.models import (
     ServerManifest,
     UpdateResponse,
 )
+from config import settings
 
 
 def is_removed(path: str, sha256: str, server_manifest: ServerManifest) -> bool:
     # Проверяет, считается ли данный SHA удалённым
-    removed = server_manifest.removed.get(path, {})
+    removed = server_manifest.removed.get(path, [])
     return sha256 in removed
 
 
 def build_delete_list(
     client_manifest: ClientManifest, server_manifest: ServerManifest
 ) -> List[str]:
-    delete = []
+    delete: list[str] = []
     for client_path, client_file in client_manifest.files.items():
 
         # Если файла больше нет на сервере,
@@ -42,8 +43,8 @@ def build_download_list(
     server_manifest: ServerManifest,
     instance: str,
     base_url: str,
-) -> List[DownloadFile]:
-    download = []
+) -> list[DownloadFile]:
+    download: list[DownloadFile] = []
 
     client_pack = client_manifest.pack
     server_pack = server_manifest.pack
@@ -56,7 +57,7 @@ def build_download_list(
                 path=server_pack.path,
                 sha256=server_pack.sha256,
                 size=server_pack.size,
-                url=f"{base_url}/files/"
+                url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_pack.path, safe='/')}",
             )
@@ -73,7 +74,7 @@ def build_download_list(
                 path=server_instance.path,
                 sha256=server_instance.sha256,
                 size=server_instance.size,
-                url=f"{base_url}/files/"
+                url=f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_instance.path, safe='/')}",
             )
@@ -85,7 +86,7 @@ def build_download_list(
         # Нет файла
         if server_path not in client_manifest.files:
             url = (
-                f"{base_url}/files/"
+                f"{base_url}{settings.INSTANCES_FOLDER_PATH}/"
                 f"{quote(instance)}/"
                 f"{quote(server_path, safe='/')}"
             )

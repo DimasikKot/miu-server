@@ -2,9 +2,9 @@ from functools import lru_cache
 from pathlib import Path
 
 
-class _Settings():
+class _Settings:
     MANIFEST_NAME = "manifest.json"
-    INSTANCES_FOLDER_PATH = Path("/istances")
+    INSTANCES_FOLDER_PATH = Path("/instances")
 
 
 @lru_cache

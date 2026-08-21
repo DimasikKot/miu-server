@@ -1,5 +1,4 @@
-from typing import Dict, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 # ---------- File ----------
 
@@ -26,10 +25,10 @@ class ServerManifest(BaseModel):
     version: int = 1
     pack: ManifestFile | None
     instance: ManifestFile | None
-    files: Dict[str, ManifestFile] = Field(default_factory=dict)
-    removed: Dict[str, List[str]] = Field(default_factory=dict)
-    servers: List[ServerInfo] = Field(default_factory=list)
-    resource_packs: List[str] = Field(default_factory=list)
+    files: dict[str, ManifestFile]
+    removed: dict[str, set[str]]
+    servers: list[ServerInfo]
+    resource_packs: list[str]
 
 
 # ---------- Client Manifest ----------
@@ -38,9 +37,9 @@ class ServerManifest(BaseModel):
 class ClientManifest(BaseModel):
     pack: ManifestFile | None
     instance: ManifestFile | None
-    files: Dict[str, ManifestFile]
-    servers: List[ServerInfo] = Field(default_factory=list)
-    resource_packs: List[str] = Field(default_factory=list)
+    files: dict[str, ManifestFile]
+    servers: list[ServerInfo]
+    resource_packs: list[str]
 
 
 # ---------- Download ----------
@@ -58,7 +57,7 @@ class DownloadFile(BaseModel):
 
 class UpdateResponse(BaseModel):
     version: int
-    download: List[DownloadFile]
-    delete: List[str]
-    servers: List[ServerInfo]
-    resource_packs: List[str] = Field(default_factory=list)
+    download: list[DownloadFile]
+    delete: list[str]
+    servers: list[ServerInfo]
+    resource_packs: list[str]

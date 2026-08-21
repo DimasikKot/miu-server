@@ -3,12 +3,15 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from api.v1.endpoints import router_v1
+
 # from api.v2.routers.endpoints import router_v2
 from config import settings
 
 app = FastAPI(title="PurMur Instances", version="2.0.0")
 app.mount(
-    "/istances", StaticFiles(directory=settings.INSTANCES_FOLDER_PATH), name="istances"
+    str(settings.INSTANCES_FOLDER_PATH),
+    StaticFiles(directory=settings.INSTANCES_FOLDER_PATH),
+    name="instances",
 )
 
 # # Разрешённые источники

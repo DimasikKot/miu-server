@@ -9,10 +9,10 @@ router_v1: APIRouter = APIRouter()
 
 
 @router_v1.post("/build/{instance}")
-def build(instance: str):
+def build(instance: str = "PurMur Vanilla") -> dict[str, str | int]:
     instance_path = settings.INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
-        raise HTTPException(404, "Instance not found")
+        raise HTTPException(404, f"Instance not found: {instance_path}")
 
     manifest = build_manifest(instance_path)
     save_manifest(instance_path, manifest)
@@ -21,7 +21,11 @@ def build(instance: str):
 
 
 @router_v1.post("/update/{instance}")
-def update(instance: str, client_manifest: ClientManifest, request: Request):
+def update(
+    client_manifest: ClientManifest,
+    request: Request,
+    instance: str = "PurMur Vanilla",
+):
     instance_path = settings.INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")

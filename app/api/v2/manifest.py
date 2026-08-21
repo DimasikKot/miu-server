@@ -19,7 +19,7 @@ def sha256(path: Path) -> str:
 
 
 def scan_files(instance_path: Path):
-    result = {}
+    result: set[FileInfo] = set()
     folders = [
         "minecraft/config",
         "minecraft/mods",
@@ -38,11 +38,13 @@ def scan_files(instance_path: Path):
 
             relative = file.relative_to(instance_path)
 
-            result[str(relative)] = FileInfo(
-                name=file.name,
-                path=str(relative),
-                sha256=sha256(file),
-                size=file.stat().st_size,
+            result.add(
+                FileInfo(
+                    name=file.name,
+                    path=str(relative),
+                    sha256=sha256(file),
+                    size=file.stat().st_size,
+                )
             )
 
     return result

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 
 from api.v2.diff import compare
 from api.v2.manifest import load_manifest
@@ -10,7 +10,11 @@ router_update: APIRouter = APIRouter()
 
 
 @router_update.post("/{instance}", response_model=UpdatePostResponse)
-def router_update(instance: str, data: UpdatePostRequest, request: Request):
+def router_update(
+    data: UpdatePostRequest,
+    request: Request,
+    instance: str = Path(default="PurMur Vanilla"),
+):
     instance_path = settings.INSTANCES_FOLDER_PATH / instance
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")

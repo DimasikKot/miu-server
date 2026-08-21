@@ -6,4 +6,4 @@ services:
     ports:
       - "10033:10033"
     volumes:
-      - ./istances:/istances
+      - ./instances:/instances

@@ -2,7 +2,7 @@ import hashlib
 import json
 from pathlib import Path
 
-from api.v1.models import ManifestFile, ServerManifest
+from api.v1.models import ManifestFile, ServerInfo, ServerManifest
 from config import settings
 
 
@@ -17,8 +17,8 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def scan_files(instance_path: Path):
-    result = {}
+def scan_files(instance_path: Path) -> dict[str, ManifestFile]:
+    result: dict[str, ManifestFile] = {}
     folders = [
         "minecraft/config",
         "minecraft/mods",
@@ -81,7 +81,9 @@ def load_manifest(instance_path: Path):
 
 def save_manifest(instance_path: Path, manifest: ServerManifest):
     with open(instance_path / settings.MANIFEST_NAME, "w", encoding="utf-8") as f:
-        json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
+        # json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
+        json_str = manifest.model_dump_json(indent=4, warnings=False)
+        f.write(json_str)
 
 
 def build_manifest(instance_path: Path):
@@ -91,32 +93,32 @@ def build_manifest(instance_path: Path):
     if not new_pack.exists():
         new_pack = None
     else:
-        with open(new_pack, encoding="utf-8") as f:
-            new_pack = ManifestFile(
-                name=new_pack.name,
-                path=str(new_pack.relative_to(instance_path)),
-                sha256=sha256(new_pack),
-                size=new_pack.stat().st_size,
-            )
+        # with open(new_pack, encoding="utf-8") as f:
+        new_pack = ManifestFile(
+            name=new_pack.name,
+            path=str(new_pack.relative_to(instance_path)),
+            sha256=sha256(new_pack),
+            size=new_pack.stat().st_size,
+        )
 
     new_instance = Path(instance_path / "instance.cfg")
     if not new_instance.exists():
         new_instance = None
     else:
-        with open(new_instance, encoding="utf-8") as f:
-            new_instance = ManifestFile(
-                name=new_instance.name,
-                path=str(new_instance.relative_to(instance_path)),
-                sha256=sha256(new_instance),
-                size=new_instance.stat().st_size,
-            )
+        # with open(new_instance, encoding="utf-8") as f:
+        new_instance = ManifestFile(
+            name=new_instance.name,
+            path=str(new_instance.relative_to(instance_path)),
+            sha256=sha256(new_instance),
+            size=new_instance.stat().st_size,
+        )
 
-    new_servers = []  # TODO minecraft/servers.dat
+    new_servers: list[ServerInfo] = []  # TODO minecraft/servers.dat
 
     old_manifest = load_manifest(instance_path)
     new_files = scan_files(instance_path)
 
-    removed = {}
+    removed: dict[str, set[str]] = {}
     version = 1
 
     if old_manifest:
@@ -128,9 +130,9 @@ def build_manifest(instance_path: Path):
 
             # файл полностью удалили
             if old_path not in new_files:
-                removed.setdefault(old_path, [])
+                removed.setdefault(old_path, set())
                 if old_file.sha256 not in removed[old_path]:
-                    removed[old_path].append(old_file.sha256)
+                    removed[old_path].add(old_file.sha256)
                 continue
 
             # новый файл
@@ -138,9 +140,9 @@ def build_manifest(instance_path: Path):
 
             # файл изменился
             if new_file.sha256 != old_file.sha256:
-                removed.setdefault(old_path, [])
+                removed.setdefault(old_path, set())
                 if old_file.sha256 not in removed[old_path]:
-                    removed[old_path].append(old_file.sha256)
+                    removed[old_path].add(old_file.sha256)
 
     # Очистка removed
 
@@ -149,7 +151,7 @@ def build_manifest(instance_path: Path):
     for old_path, old_hashes in list(removed.items()):
         if old_path in new_files:
             current_hash = new_files[old_path].sha256
-            removed[old_path] = [h for h in old_hashes if h != current_hash]
+            removed[old_path] = {h for h in old_hashes if h != current_hash}
 
         # если список пустой - удалить запись
         if not removed[old_path]:

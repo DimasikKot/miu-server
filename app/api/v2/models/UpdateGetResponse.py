@@ -1,10 +1,8 @@
-from typing import Dict
-
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class UpdateGetResponse(BaseModel):
-    files_paths: Dict[str] = Field(default_factory=dict)
-    dirs_paths: Dict[str] = Field(default_factory=dict)
-    strict_files_paths: Dict[str] = Field(default_factory=dict)
-    strict_dirs_paths: Dict[str] = Field(default_factory=dict)
+    files_paths: set[str]
+    dirs_paths: set[str]
+    strict_files_paths: set[str]
+    strict_dirs_paths: set[str]
