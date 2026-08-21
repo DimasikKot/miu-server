@@ -19,19 +19,16 @@ def build_delete_list(
     request: UpdatePostRequest, instance_manifest: InstanceManifest
 ) -> set[str]:
     need_delete: set[str] = set()
-    for request_file in request.files:
-        request_path = request_file.path
+    for request_file_path, request_file in request.files.items():
         # Если файла больше нет на сервере, но его SHA находится в removed
-        if request_path not in [
-            instance_file.path for instance_file in instance_manifest.files
-        ]:
-            if is_deleted(request_path, request_file.sha256, instance_manifest):
-                need_delete.add(request_path)
+        if request_file_path not in instance_manifest.files.keys():
+            if is_deleted(request_file_path, request_file.sha256, instance_manifest):
+                need_delete.add(request_file_path)
             continue
 
         # Если SHA клиента совпадает с одним из старых SHA
-        if is_deleted(request_path, request_file.sha256, instance_manifest):
-            need_delete.add(request_path)
+        if is_deleted(request_file_path, request_file.sha256, instance_manifest):
+            need_delete.add(request_file_path)
 
     return need_delete
 
@@ -42,15 +39,15 @@ def build_download_list(
     instance_name: str,
     base_url: str,
 ) -> set[FileDownloadInfo]:
-    need_download: set[FileDownloadInfo] = set()
-    request_files_paths = {file.path for file in request.files}
+    # TODO сделать strict_dirs_paths из манифеста
+    strict_dirs_paths = ["minecraft/mods"]
 
+    need_download: set[FileDownloadInfo] = set()
     # Проходим по всем файлам внутри InstanceManifest
-    for instance_file in instance_manifest.files:
-        instance_file_path = instance_file.path
+    for instance_file_path, instance_file in instance_manifest.files.items():
         download_url = f"{base_url}{settings.INSTANCES_FOLDER_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
         # Нет файла
-        if instance_file_path not in request_files_paths:
+        if instance_file_path not in request.files.keys():
             need_download.add(
                 FileDownloadInfo(
                     path=instance_file_path,
@@ -61,16 +58,13 @@ def build_download_list(
             )
             continue
 
-        request_file = [
-            file for file in request.files if file.path == instance_file_path
-        ][0]
+        request_file = request.files[instance_file_path]
         # SHA совпадает
         if request_file.sha256 == instance_file.sha256:
             continue
 
-        # SHA отличается и это строгое место (моды)
-        strict_folders = ["minecraft/mods"]  # TODO
-        if any(instance_file_path.startswith(folder) for folder in strict_folders):
+        # SHA отличается и это строгое место (например, моды)
+        if any(instance_file_path.startswith(folder) for folder in strict_dirs_paths):
             need_download.add(
                 FileDownloadInfo(
                     path=instance_file_path,

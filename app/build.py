@@ -2,6 +2,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from api.v1.models import ServerManifest
+from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from models.FileInfo import FileInfo
 from models.ServerInfo import ServerInfo
 from models.server.BuildPostResponse import BuildPostResponse
@@ -15,6 +17,12 @@ def load_manifest(instance_path: Path) -> InstanceManifest | None:
         return None
 
     with open(file, encoding="utf-8") as f:
+        json_manifest = json.load(f)
+        if json_manifest.get("api_version") is None:
+            manifest_v1 = ServerManifest.model_validate(json_manifest)
+            manifest_v2 = InstanceManifestV1toV2(data=manifest_v1)
+            return InstanceManifest.model_validate(manifest_v2)
+
         return InstanceManifest.model_validate(json.load(f))
 
 
@@ -36,40 +44,46 @@ def sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def scan_files(instance_path: Path) -> set[FileInfo]:
-    result: set[FileInfo] = set()
-    folders = [
-        "minecraft/config",
-        "minecraft/mods",
-        "minecraft/resourcepacks",
-        "minecraft/xaero",
-    ]  # TODO
+def scan_files(
+    instance_path: Path, files_paths: set[str], dirs_paths: set[str]
+) -> dict[str, FileInfo]:
+    result: dict[str, FileInfo] = {}
 
-    for folder in folders:
-        current = instance_path / folder
-        if not current.exists():
+    for file in files_paths:
+        current_file_path = instance_path / file
+        if not current_file_path.exists():
             continue
 
-        for file in current.rglob("*"):
+        relative = current_file_path.relative_to(instance_path)
+
+        result[str(relative)] = FileInfo(
+            name=current_file_path.name,
+            sha256=sha256(current_file_path),
+            size=current_file_path.stat().st_size,
+        )
+
+    for dir in dirs_paths:
+        current_dir_path = instance_path / dir
+        if not current_dir_path.exists():
+            continue
+
+        for file in current_dir_path.rglob("*"):
             if not file.is_file():
                 continue
 
             relative = file.relative_to(instance_path)
 
-            result.add(
-                FileInfo(
-                    name=file.name,
-                    path=str(relative),
-                    sha256=sha256(file),
-                    size=file.stat().st_size,
-                )
+            result[str(relative)] = FileInfo(
+                name=file.name,
+                sha256=sha256(file),
+                size=file.stat().st_size,
             )
 
     return result
 
 
-def get_resource_packs(minecraft_dir_path: Path) -> set[str]:
-    options_path = minecraft_dir_path / "options.txt"
+def get_resourcepacks(minecraft_dir_path: Path) -> set[str]:
+    options_path = minecraft_dir_path / "minecraft/options.txt"
 
     # Если файла нет, возвращаем пустой список
     if not options_path.exists():
@@ -92,88 +106,88 @@ def get_resource_packs(minecraft_dir_path: Path) -> set[str]:
 
 
 def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResponse]:
-    new_resourcepacks = get_resource_packs(instance_path / "minecraft")
-
-    new_pack = Path(instance_path / "mmc-pack.json")
-    if not new_pack.exists():
-        new_pack = None
-    else:
-        # with open(new_pack, encoding="utf-8") as f:
-        new_pack = FileInfo(
-            name=new_pack.name,
-            path=str(new_pack.relative_to(instance_path)),
-            sha256=sha256(new_pack),
-            size=new_pack.stat().st_size,
-        )
-
-    new_instance = Path(instance_path / "instance.cfg")
-    if not new_instance.exists():
-        new_instance = None
-    else:
-        # with open(new_instance, encoding="utf-8") as f:
-        new_instance = FileInfo(
-            name=new_instance.name,
-            path=str(new_instance.relative_to(instance_path)),
-            sha256=sha256(new_instance),
-            size=new_instance.stat().st_size,
-        )
-
+    new_resourcepacks = get_resourcepacks(instance_path)
     new_servers: list[ServerInfo] = []  # TODO minecraft/servers.dat
 
     old_manifest = load_manifest(instance_path)
     files_deleted: dict[str, str] = {}
     files_edited: dict[str, str] = {}
     files_added: dict[str, str] = {}
-    new_files = scan_files(instance_path)
+
+    # TODO сделать files_paths и dirs_paths из манифеста
+
+    files_paths = {
+        "mmc-pack.json",
+        "instance.cfg",
+        "minecraft/options.txt",
+    }
+
+    dirs_paths = {
+        "minecraft/config",
+        "minecraft/mods",
+        "minecraft/resourcepacks",
+        "minecraft/xaero",
+    }
+
+    new_files = scan_files(
+        instance_path=instance_path,
+        files_paths=files_paths,
+        dirs_paths=dirs_paths,
+    )
 
     new_deleted: dict[str, set[str]] = {}
     version = 1
 
     if old_manifest:
         # файл полностью новый
-        for new_file in new_files:
-            if new_file.path not in [file.path for file in old_manifest.files]:
-                files_added[new_file.path] = new_file.sha256
+        for new_file_path, new_file in new_files.items():
+            if new_file_path not in old_manifest.files.keys():
+                files_added[new_file_path] = new_file.sha256
 
         new_deleted = old_manifest.deleted.copy()
 
         # сравнение старого и нового манифеста
-        for old_file in old_manifest.files:
+        for old_file_path, old_file in old_manifest.files.items():
             # файл полностью удалили
-            if old_file.path not in [file.path for file in new_files]:
-                new_deleted.setdefault(old_file.path, set())
-                if old_file.sha256 not in new_deleted[old_file.path]:
-                    new_deleted[old_file.path].add(old_file.sha256)
+            if old_file_path not in new_files.keys():
+                new_deleted.setdefault(old_file_path, set())
+                if old_file.sha256 not in new_deleted[old_file_path]:
+                    new_deleted[old_file_path].add(old_file.sha256)
                     # узнаём новые удалённые файлы
-                    files_deleted[old_file.path] = old_file.sha256
+                    files_deleted[old_file_path] = old_file.sha256
                 continue
 
             # уже существовал файл
-            edited_file = [file for file in new_files if file.path == old_file.path][0]
+            edited_file = new_files[old_file_path]
 
             # файл изменился
             if edited_file.sha256 != old_file.sha256:
-                new_deleted.setdefault(old_file.path, set())
-                if old_file.sha256 not in new_deleted[old_file.path]:
-                    new_deleted[old_file.path].add(old_file.sha256)
+                new_deleted.setdefault(old_file_path, set())
+                if old_file.sha256 not in new_deleted[old_file_path]:
+                    new_deleted[old_file_path].add(old_file.sha256)
                     # узнаём новые изменённые файлы
-                    files_edited[old_file.path] = old_file.sha256
+                    files_edited[old_file_path] = old_file.sha256
 
         # если sha256 снова существует среди актуальных файлов,
         # он больше не является удалённым
-        for old_path, old_shas256 in list(new_deleted.items()):
-            if old_path in [file.path for file in new_files]:
-                current_file = [file for file in new_files if file.path == old_path][0]
-                new_deleted[old_path] = {
-                    sha256 for sha256 in old_shas256 if sha256 != current_file.sha256
+        for old_deleted_file_path, old_deleted_file_shas256 in list(
+            new_deleted.items()
+        ):
+            if old_deleted_file_path in new_files.keys():
+                current_file = new_files[old_deleted_file_path]
+                new_deleted[old_deleted_file_path] = {
+                    sha256
+                    for sha256 in old_deleted_file_shas256
+                    if sha256 != current_file.sha256
                 }
 
             # если список shas256 пустой - удалить запись
-            if not new_deleted[old_path]:
-                del new_deleted[old_path]
+            if not new_deleted[old_deleted_file_path]:
+                del new_deleted[old_deleted_file_path]
 
     new_manifest = InstanceManifest(
         version=version,
+        api_version=2,
         files_paths=old_manifest.files_paths if old_manifest else set(),
         dirs_paths=old_manifest.dirs_paths if old_manifest else set(),
         strict_files_paths=old_manifest.strict_files_paths if old_manifest else set(),
@@ -193,6 +207,7 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
 
     return new_manifest, BuildPostResponse(
         version=version,
+        api_version=2,
         new_files_paths=old_manifest.files_paths if old_manifest else set(),
         new_dirs_paths=old_manifest.dirs_paths if old_manifest else set(),
         new_strict_files_paths=(

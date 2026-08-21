@@ -7,3 +7,4 @@ services:
       - "10033:10033"
     volumes:
       - ./instances:/instances
+      - ./app:/app # for hot-reloading

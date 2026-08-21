@@ -1,2 +1,3 @@
 files/
 instances/
+**/__pycache__/

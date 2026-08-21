@@ -19,6 +19,16 @@ class ClientManifest(BaseModel):
     resource_packs: list[str]
 
 
+class ServerManifest(BaseModel):
+    version: int
+    pack: ManifestFile | None
+    instance: ManifestFile | None
+    files: dict[str, ManifestFile]
+    removed: dict[str, set[str]]
+    servers: list[ServerInfo]
+    resource_packs: list[str]
+
+
 class UpdateResponse(BaseModel):
     version: int
     download: list[FileDownloadInfo]

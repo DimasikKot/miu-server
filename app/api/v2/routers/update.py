@@ -1,19 +1,23 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 
 from models.UpdatePostRequest import UpdatePostRequest
 from models.UpdatePostResponse import UpdatePostResponse
 from config import settings
-from diff import compare
-from manifest import load_manifest
+from update import compare
+from build import load_manifest
 
 router_update: APIRouter = APIRouter()
 
 
 @router_update.post("/{instance_name}", response_model=UpdatePostResponse)
-def router_update_post(
+def update_post(
     request: UpdatePostRequest,
     request_class: Request,
-    instance_name: str,
+    instance_name: str = Path(
+        ...,
+        description="PurMur Vanilla . . PurMur Create . . PurMur Homestead",
+        example="PurMur Vanilla",
+    ),
 ) -> UpdatePostResponse:
     instance_path = settings.INSTANCES_FOLDER_PATH / instance_name
     if not instance_path.exists():

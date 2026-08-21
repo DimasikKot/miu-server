@@ -8,7 +8,8 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     "**/.vscode": true,
-    "instances/**": true,
+    "**/__pycache__": true,
+    "instances/**": false,
     ".gitignore": true,
     "Dockerfile": true
   },

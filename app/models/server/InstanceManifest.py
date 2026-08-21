@@ -5,7 +5,8 @@ from models.ServerInfo import ServerInfo
 
 
 class InstanceManifest(BaseModel):
-    version: int = 1
+    version: int
+    api_version: int
     files_paths: set[str]
     dirs_paths: set[str]
     strict_files_paths: set[str]
@@ -13,4 +14,4 @@ class InstanceManifest(BaseModel):
     resourcepacks: set[str]
     servers: list[ServerInfo]
     deleted: dict[str, set[str]]  # Название: SHA
-    files: set[FileInfo]
+    files: dict[str, FileInfo]  # path: [FileInfo]

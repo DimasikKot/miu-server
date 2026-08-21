@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 
 from api.v1.models import ClientManifest, UpdateResponse
-from api.v1.transformV2toV1 import UpdatePostRequestV1toV2, UpdatePostResponseV2toV1
+from api.v1.transformV1toV2 import UpdatePostRequestV1toV2, UpdatePostResponseV2toV1
 from config import settings
-from diff import compare
-from manifest import load_manifest
+from update import compare
+from build import load_manifest
 
 router_v1: APIRouter = APIRouter()
 
@@ -13,7 +13,11 @@ router_v1: APIRouter = APIRouter()
 def update(
     request: ClientManifest,
     request_class: Request,
-    instance_name: str,
+    instance_name: str = Path(
+        ...,
+        description="PurMur Vanilla . . PurMur Create . . PurMur Homestead",
+        example="PurMur Vanilla",
+    ),
 ) -> UpdateResponse:
     request_v2 = UpdatePostRequestV1toV2(data=request)
 
@@ -32,4 +36,4 @@ def update(
         base_url=str(request_class.base_url).rstrip("/"),
     )
 
-    return UpdatePostResponseV2toV1(response)
+    return UpdateResponse.model_validate(UpdatePostResponseV2toV1(response))
