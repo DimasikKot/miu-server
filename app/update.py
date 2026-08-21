@@ -38,40 +38,47 @@ def build_download_list(
     instance_manifest: InstanceManifest,
     instance_name: str,
     base_url: str,
-) -> set[FileDownloadInfo]:
-    # TODO сделать strict_dirs_paths из манифеста
-    strict_dirs_paths = ["minecraft/mods"]
+) -> dict[str, FileDownloadInfo]:
+    # TODO сделать strict_files_paths и strict_dirs_paths из манифеста
 
-    need_download: set[FileDownloadInfo] = set()
+    strict_files_paths = {"mmc-pack.json"}
+
+    strict_dirs_paths = {"minecraft/mods"}
+
+    need_download: dict[str, FileDownloadInfo] = {}
     # Проходим по всем файлам внутри InstanceManifest
     for instance_file_path, instance_file in instance_manifest.files.items():
         download_url = f"{base_url}{settings.INSTANCES_FOLDER_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
         # Нет файла
         if instance_file_path not in request.files.keys():
-            need_download.add(
-                FileDownloadInfo(
-                    path=instance_file_path,
-                    sha256=instance_file.sha256,
-                    size=instance_file.size,
-                    url=download_url,
-                )
+            need_download[instance_file_path] = FileDownloadInfo(
+                sha256=instance_file.sha256,
+                size=instance_file.size,
+                url=download_url,
             )
             continue
 
         request_file = request.files[instance_file_path]
+
         # SHA совпадает
         if request_file.sha256 == instance_file.sha256:
             continue
 
+        # SHA отличается и это строгое место
+        if instance_file_path in strict_files_paths:
+            need_download[instance_file_path] = FileDownloadInfo(
+                sha256=instance_file.sha256,
+                size=instance_file.size,
+                url=download_url,
+            )
+            continue
+
         # SHA отличается и это строгое место (например, моды)
         if any(instance_file_path.startswith(folder) for folder in strict_dirs_paths):
-            need_download.add(
-                FileDownloadInfo(
-                    path=instance_file_path,
-                    sha256=instance_file.sha256,
-                    size=instance_file.size,
-                    url=download_url,
-                )
+            need_download[instance_file_path] = FileDownloadInfo(
+                sha256=instance_file.sha256,
+                size=instance_file.size,
+                url=download_url,
             )
 
     return need_download

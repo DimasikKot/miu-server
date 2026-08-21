@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 
-from models.FileDownloadInfo import FileDownloadInfo
 from models.ServerInfo import ServerInfo
 
 
@@ -29,9 +28,16 @@ class ServerManifest(BaseModel):
     resource_packs: list[str]
 
 
+class DownloadFile(BaseModel):
+    path: str
+    sha256: str
+    size: int
+    url: str
+
+
 class UpdateResponse(BaseModel):
     version: int
-    download: list[FileDownloadInfo]
+    download: list[DownloadFile]
     delete: list[str]
     servers: list[ServerInfo]
     resource_packs: list[str]

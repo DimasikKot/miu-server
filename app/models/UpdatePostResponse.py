@@ -8,4 +8,4 @@ class UpdatePostResponse(BaseModel):
     new_resourcepacks: set[str]
     new_servers: list[ServerInfo]
     need_delete: set[str]
-    need_download: set[FileDownloadInfo]
+    need_download: dict[str, FileDownloadInfo]

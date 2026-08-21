@@ -1,4 +1,11 @@
-from api.v1.models import ClientManifest, ManifestFile, ServerManifest, UpdateResponse
+from api.v1.models import (
+    ClientManifest,
+    DownloadFile,
+    ManifestFile,
+    ServerManifest,
+    UpdateResponse,
+)
+from models.FileDownloadInfo import FileDownloadInfo
 from models.FileInfo import FileInfo
 from models.UpdatePostRequest import UpdatePostRequest
 from models.UpdatePostResponse import UpdatePostResponse
@@ -45,10 +52,24 @@ def UpdatePostRequestV1toV2(data: ClientManifest) -> UpdatePostRequest:
     return data_v2
 
 
+def FileDownloadInfoV2toV1(path: str, data: FileDownloadInfo) -> DownloadFile:
+    data_v1 = DownloadFile(
+        path=path,
+        sha256=data.sha256,
+        size=data.size,
+        url=data.url,
+    )
+
+    return data_v1
+
+
 def UpdatePostResponseV2toV1(data: UpdatePostResponse) -> UpdateResponse:
     data_v1 = UpdateResponse(
         version=0,
-        download=list(data.need_download),
+        download=[
+            FileDownloadInfoV2toV1(file_path, file)
+            for file_path, file in data.need_download.items()
+        ],
         delete=list(data.need_delete),
         servers=list(data.new_servers),
         resource_packs=list(data.new_resourcepacks),
