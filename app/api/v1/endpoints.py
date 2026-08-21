@@ -1,41 +1,35 @@
 from fastapi import APIRouter, HTTPException, Request
 
-from api.v1.models import ClientManifest
-from api.v1.manifest import build_manifest, load_manifest, save_manifest
-from api.v1.diff import compare
+from api.v1.models import ClientManifest, UpdateResponse
+from api.v1.transformV2toV1 import UpdatePostRequestV1toV2, UpdatePostResponseV2toV1
 from config import settings
+from diff import compare
+from manifest import load_manifest
 
 router_v1: APIRouter = APIRouter()
 
 
-@router_v1.post("/build/{instance}")
-def build(instance: str = "PurMur Vanilla") -> dict[str, str | int]:
-    instance_path = settings.INSTANCES_FOLDER_PATH / instance
-    if not instance_path.exists():
-        raise HTTPException(404, f"Instance not found: {instance_path}")
-
-    manifest = build_manifest(instance_path)
-    save_manifest(instance_path, manifest)
-
-    return {"status": "success", "version": manifest.version}
-
-
-@router_v1.post("/update/{instance}")
+@router_v1.post("/update/{instance_name}", response_model=UpdateResponse)
 def update(
-    client_manifest: ClientManifest,
-    request: Request,
-    instance: str = "PurMur Vanilla",
-):
-    instance_path = settings.INSTANCES_FOLDER_PATH / instance
+    request: ClientManifest,
+    request_class: Request,
+    instance_name: str,
+) -> UpdateResponse:
+    request_v2 = UpdatePostRequestV1toV2(data=request)
+
+    instance_path = settings.INSTANCES_FOLDER_PATH / instance_name
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 
-    server_manifest = load_manifest(instance_path)
-    if server_manifest is None:
+    instance_manifest = load_manifest(instance_path)
+    if instance_manifest is None:
         raise HTTPException(500, "Manifest missing")
 
-    result = compare(
-        instance, client_manifest, server_manifest, str(request.base_url).rstrip("/")
+    response = compare(
+        request=request_v2,
+        instance_manifest=instance_manifest,
+        instance_name=instance_name,
+        base_url=str(request_class.base_url).rstrip("/"),
     )
 
-    return result
+    return UpdatePostResponseV2toV1(response)

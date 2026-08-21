@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from api.v1.endpoints import router_v1
 
-# from api.v2.routers.endpoints import router_v2
+from api.v2.endpoints import router_v2
 from config import settings
 
 app = FastAPI(title="PurMur Instances", version="2.0.0")
@@ -32,4 +32,4 @@ app.mount(
 
 # Подключение всех версий API
 app.include_router(router_v1, tags=["V1"])
-# app.include_router(router_v2, prefix="/api/v2", tags=["V2"])
+app.include_router(router_v2, prefix="/api/v2", tags=["V2"])
