@@ -1,3 +1,5 @@
 files/
 instances/
 **/__pycache__/
+miu-client/
+!miu-client/PreLaunchCommand.txt
