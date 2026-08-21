@@ -11,7 +11,7 @@ class InstanceManifest(BaseModel):
     dirs_paths: set[str]
     strict_files_paths: set[str]
     strict_dirs_paths: set[str]
-    resourcepacks: set[str]
+    resourcepacks: list[str]
     servers: list[ServerInfo]
     deleted: dict[str, set[str]]  # Название: SHA
     files: dict[str, FileInfo]  # path: [FileInfo]

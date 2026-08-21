@@ -21,7 +21,7 @@ def InstanceManifestV1toV2(data: ServerManifest) -> InstanceManifest:
         dirs_paths=set(),
         strict_files_paths=set(),
         strict_dirs_paths=set(),
-        resourcepacks=set(data.resource_packs),
+        resourcepacks=data.resource_packs,
         servers=data.servers,
         deleted=data.removed,
         # transform FileInfoV1toV2
@@ -43,7 +43,7 @@ def FileInfoV1toV2(data: ManifestFile) -> FileInfo:
 
 def UpdatePostRequestV1toV2(data: ClientManifest) -> UpdatePostRequest:
     data_v2 = UpdatePostRequest(
-        resourcepacks=set(data.resource_packs),
+        resourcepacks=data.resource_packs,
         servers=data.servers,
         # transform FileInfoV1toV2
         files={file.name: FileInfoV1toV2(file) for file in data.files.values()},

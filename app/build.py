@@ -82,12 +82,12 @@ def scan_files(
     return result
 
 
-def get_resourcepacks(minecraft_dir_path: Path) -> set[str]:
+def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
     options_path = minecraft_dir_path / "minecraft/options.txt"
 
     # Если файла нет, возвращаем пустой список
     if not options_path.exists():
-        return set()
+        return []
 
     with open(options_path, "r", encoding="utf-8") as file:
         for line in file:
@@ -98,11 +98,11 @@ def get_resourcepacks(minecraft_dir_path: Path) -> set[str]:
                 # Убираем квадратные скобки по краям, если они есть (аналог substring в Java)
                 value = value.strip("[]")
                 if not value:
-                    return set()
+                    return []
 
                 # Разделяем по запятой, убираем пробелы и кавычки у каждого элемента
-                return {part.strip().strip('"') for part in value.split(",")}
-    return set()
+                return [part.strip().strip('"') for part in value.split(",")]
+    return []
 
 
 def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResponse]:

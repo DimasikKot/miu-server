@@ -5,6 +5,6 @@ from models.ServerInfo import ServerInfo
 
 
 class UpdatePostRequest(BaseModel):
-    resourcepacks: set[str]
+    resourcepacks: list[str]
     servers: list[ServerInfo]
     files: dict[str, FileInfo]  # path: [FileInfo]

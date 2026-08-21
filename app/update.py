@@ -105,10 +105,10 @@ def compare_servers(
 
 
 def compare_resourcepacks(
-    request_resourcepacks: set[str], instance_resourcepacks: set[str]
-) -> set[str]:
+    request_resourcepacks: list[str], instance_resourcepacks: list[str]
+) -> list[str]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
-    result = set(request_resourcepacks)
+    result = request_resourcepacks
 
     # 2. Создаём множество из текущих ресурс паков клиента для быстрого поиска (O(1))
     # Также это автоматически убирает возможные дубликаты, если они вдруг были в client_resource_packs
@@ -118,7 +118,7 @@ def compare_resourcepacks(
     for resource_pack in instance_resourcepacks:
         # Если ресурс паков ещё нет у клиента, добавляем его в конец
         if resource_pack not in existing_resource_packs:
-            result.add(resource_pack)
+            result.append(resource_pack)
             existing_resource_packs.add(
                 resource_pack
             )  # Обновляем множество, чтобы не добавить его повторно
