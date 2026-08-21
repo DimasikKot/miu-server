@@ -4,7 +4,10 @@ from pathlib import Path
 
 class _Settings:
     MANIFEST_NAME = "manifest.json"
-    INSTANCES_FOLDER_PATH = Path("/instances")
+    INSTANCES_DIR_PATH = Path("/instances")
+
+    MIU_CLIENT_DIR_PATH = Path("/miu-client")
+    MIU_CLIENT_COMMAND_FILE_NAME = Path("/miu-client/PreLaunchCommand.txt")
 
 
 @lru_cache

@@ -15,7 +15,7 @@ def build_post(
         example="PurMur Vanilla",
     )
 ) -> BuildPostResponse:
-    instance_path = settings.INSTANCES_FOLDER_PATH / instance_name
+    instance_path = settings.INSTANCES_DIR_PATH / instance_name
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 

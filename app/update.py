@@ -48,7 +48,7 @@ def build_download_list(
     need_download: dict[str, FileDownloadInfo] = {}
     # Проходим по всем файлам внутри InstanceManifest
     for instance_file_path, instance_file in instance_manifest.files.items():
-        download_url = f"{base_url}{settings.INSTANCES_FOLDER_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
+        download_url = f"{base_url}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
         # Нет файла
         if instance_file_path not in request.files.keys():
             need_download[instance_file_path] = FileDownloadInfo(

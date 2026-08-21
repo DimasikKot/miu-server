@@ -7,8 +7,8 @@ from config import settings
 
 app = FastAPI(title="PurMur Instances", version="2.0.0")
 app.mount(
-    str(settings.INSTANCES_FOLDER_PATH),
-    StaticFiles(directory=settings.INSTANCES_FOLDER_PATH),
+    str(settings.INSTANCES_DIR_PATH),
+    StaticFiles(directory=settings.INSTANCES_DIR_PATH),
     name="instances",
 )
 
