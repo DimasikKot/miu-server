@@ -3,8 +3,8 @@ from fastapi import APIRouter, HTTPException, Path, Request
 from models.UpdatePostRequest import UpdatePostRequest
 from models.UpdatePostResponse import UpdatePostResponse
 from config import settings
-from update import compare
-from build import load_manifest
+from logic.update import compare
+from logic.build import load_manifest
 
 router_update: APIRouter = APIRouter()
 

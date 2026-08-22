@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Path
 
 from models.server.BuildPostResponse import BuildPostResponse
 from config import settings
-from build import build_manifest, save_manifest
+from logic.build import build_manifest, save_manifest
 
 router_build: APIRouter = APIRouter()
 

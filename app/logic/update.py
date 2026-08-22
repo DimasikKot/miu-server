@@ -39,12 +39,6 @@ def build_download_list(
     instance_name: str,
     base_url: str,
 ) -> dict[str, FileDownloadInfo]:
-    # TODO сделать strict_files_paths и strict_dirs_paths из манифеста
-
-    strict_files_paths = {"mmc-pack.json"}
-
-    strict_dirs_paths = {"minecraft/mods"}
-
     need_download: dict[str, FileDownloadInfo] = {}
     # Проходим по всем файлам внутри InstanceManifest
     for instance_file_path, instance_file in instance_manifest.files.items():
@@ -65,7 +59,7 @@ def build_download_list(
             continue
 
         # SHA отличается и это строгое место
-        if instance_file_path in strict_files_paths:
+        if instance_file_path in instance_manifest.strict_files_paths:
             need_download[instance_file_path] = FileDownloadInfo(
                 sha256=instance_file.sha256,
                 size=instance_file.size,
@@ -74,7 +68,10 @@ def build_download_list(
             continue
 
         # SHA отличается и это строгое место (например, моды)
-        if any(instance_file_path.startswith(folder) for folder in strict_dirs_paths):
+        if any(
+            instance_file_path.startswith(folder)
+            for folder in instance_manifest.strict_dirs_paths
+        ):
             need_download[instance_file_path] = FileDownloadInfo(
                 sha256=instance_file.sha256,
                 size=instance_file.size,

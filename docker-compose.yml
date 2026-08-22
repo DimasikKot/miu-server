@@ -7,4 +7,5 @@ services:
       - "10033:10033"
     volumes:
       - ./instances:/instances
+      - ./miu-client:/miu-client
       - ./app:/app # for hot-reloading

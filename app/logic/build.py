@@ -2,6 +2,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from fastapi import HTTPException
+
 from api.v1.models import ServerManifest
 from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from models.FileInfo import FileInfo
@@ -9,6 +11,7 @@ from models.ServerInfo import ServerInfo
 from models.server.BuildPostResponse import BuildPostResponse
 from models.server.InstanceManifest import InstanceManifest
 from config import settings
+from models.server.InstanceManifestDirs import InstanceManifestDirs
 
 
 def load_manifest(instance_path: Path) -> InstanceManifest | None:
@@ -26,10 +29,20 @@ def load_manifest(instance_path: Path) -> InstanceManifest | None:
         return InstanceManifest.model_validate(manifest_json)
 
 
+def load_manifest_dirs(instance_path: Path) -> InstanceManifestDirs | None:
+    file = instance_path / settings.MANIFEST_DIRS_NAME
+    if not file.exists():
+        return None
+
+    with open(file, encoding="utf-8") as f:
+        manifest_json = json.load(f)
+        return InstanceManifestDirs.model_validate(manifest_json)
+
+
 def save_manifest(instance_path: Path, manifest: InstanceManifest):
     with open(instance_path / settings.MANIFEST_NAME, "w", encoding="utf-8") as f:
         # json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
-        json_str = manifest.model_dump_json(indent=4, warnings=False)
+        json_str = manifest.model_dump_json(indent=2, warnings=False)
         f.write(json_str)
 
 
@@ -107,27 +120,20 @@ def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
 
 def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResponse]:
     new_resourcepacks = get_resourcepacks(instance_path)
-    new_servers: list[ServerInfo] = []  # TODO minecraft/servers.dat
+    # TODO minecraft/servers.dat
+    new_servers: list[ServerInfo] = []
 
     old_manifest = load_manifest(instance_path)
     files_deleted: dict[str, str] = {}
     files_edited: dict[str, str] = {}
     files_added: dict[str, str] = {}
 
-    # TODO сделать files_paths и dirs_paths из манифеста
+    files_paths: set[str] = set()
+    dirs_paths: set[str] = set()
 
-    files_paths = {
-        "mmc-pack.json",
-        "instance.cfg",
-        "minecraft/options.txt",
-    }
-
-    dirs_paths = {
-        "minecraft/config",
-        "minecraft/mods",
-        "minecraft/resourcepacks",
-        "minecraft/xaero",
-    }
+    manifest_dirs = load_manifest_dirs(instance_path)
+    if manifest_dirs is None:
+        raise HTTPException(404, "Instance manifest dirs not found")
 
     new_files = scan_files(
         instance_path=instance_path,

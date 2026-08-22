@@ -1,1 +1,0 @@
-PreLaunchCommand=java -jar \"$INST_DIR\\InstanceUpdater-1.0-SNAPSHOT.jar\" \"$INST_DIR\" \"$INST_ID\"

@@ -11,6 +11,11 @@ app.mount(
     StaticFiles(directory=settings.INSTANCES_DIR_PATH),
     name="instances",
 )
+app.mount(
+    str(settings.MIU_CLIENT_DIR_PATH),
+    StaticFiles(directory=settings.MIU_CLIENT_DIR_PATH),
+    name="miu-client",
+)
 
 # # Разрешённые источники
 # origins: list[str] = [
