@@ -25,7 +25,7 @@ def InstanceManifestV1toV2(data: ServerManifest) -> InstanceManifest:
         servers=data.servers,
         deleted=data.removed,
         # transform FileInfoV1toV2
-        files={file.name: FileInfoV1toV2(file) for file in data.files.values()},
+        files={file.path: FileInfoV1toV2(file) for file in data.files.values()},
     )
 
     return data_v2
@@ -46,7 +46,7 @@ def UpdatePostRequestV1toV2(data: ClientManifest) -> UpdatePostRequest:
         resourcepacks=data.resource_packs,
         servers=data.servers,
         # transform FileInfoV1toV2
-        files={file.name: FileInfoV1toV2(file) for file in data.files.values()},
+        files={file.path: FileInfoV1toV2(file) for file in data.files.values()},
     )
 
     return data_v2

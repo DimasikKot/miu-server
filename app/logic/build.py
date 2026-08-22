@@ -118,7 +118,7 @@ def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
     return []
 
 
-def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResponse]:
+def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
     new_resourcepacks = get_resourcepacks(instance_path)
     # TODO minecraft/servers.dat
     new_servers: list[ServerInfo] = []
@@ -128,17 +128,14 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
     files_edited: dict[str, str] = {}
     files_added: dict[str, str] = {}
 
-    files_paths: set[str] = set()
-    dirs_paths: set[str] = set()
-
     manifest_dirs = load_manifest_dirs(instance_path)
     if manifest_dirs is None:
         raise HTTPException(404, "Instance manifest dirs not found")
 
     new_files = scan_files(
         instance_path=instance_path,
-        files_paths=files_paths,
-        dirs_paths=dirs_paths,
+        files_paths=manifest_dirs.files_paths,
+        dirs_paths=manifest_dirs.dirs_paths,
     )
 
     new_deleted: dict[str, set[str]] = {}
@@ -149,7 +146,9 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
 
         # файл полностью новый
         for new_file_path, new_file in new_files.items():
-            if new_file_path not in old_manifest.files.keys():
+            if new_file_path not in old_manifest.files:
+                # узнаём новые файлы
+                print(f"file added[{new_file_path}] = {new_file.sha256}")
                 files_added[new_file_path] = new_file.sha256
 
         new_deleted = old_manifest.deleted.copy()
@@ -157,11 +156,12 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
         # сравнение старого и нового манифеста
         for old_file_path, old_file in old_manifest.files.items():
             # файл полностью удалили
-            if old_file_path not in new_files.keys():
+            if old_file_path not in new_files:
                 new_deleted.setdefault(old_file_path, set())
                 if old_file.sha256 not in new_deleted[old_file_path]:
                     new_deleted[old_file_path].add(old_file.sha256)
                     # узнаём новые удалённые файлы
+                    print(f"file deleted[{old_file_path}] = {old_file.sha256}")
                     files_deleted[old_file_path] = old_file.sha256
                 continue
 
@@ -174,6 +174,7 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
                 if old_file.sha256 not in new_deleted[old_file_path]:
                     new_deleted[old_file_path].add(old_file.sha256)
                     # узнаём новые изменённые файлы
+                    print(f"file edited[{old_file_path}] = {old_file.sha256}")
                     files_edited[old_file_path] = old_file.sha256
 
         # если sha256 снова существует среди актуальных файлов,
@@ -181,7 +182,7 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
         for old_deleted_file_path, old_deleted_file_shas256 in list(
             new_deleted.items()
         ):
-            if old_deleted_file_path in new_files.keys():
+            if old_deleted_file_path in new_files:
                 current_file = new_files[old_deleted_file_path]
                 new_deleted[old_deleted_file_path] = {
                     sha256
@@ -196,33 +197,35 @@ def build_manifest(instance_path: Path) -> tuple[InstanceManifest, BuildPostResp
     new_manifest = InstanceManifest(
         version=version,
         api_version=2,
-        files_paths=old_manifest.files_paths if old_manifest else set(),
-        dirs_paths=old_manifest.dirs_paths if old_manifest else set(),
-        strict_files_paths=old_manifest.strict_files_paths if old_manifest else set(),
-        strict_dirs_paths=old_manifest.strict_dirs_paths if old_manifest else set(),
+        files_paths=manifest_dirs.files_paths,
+        dirs_paths=manifest_dirs.dirs_paths,
+        strict_files_paths=manifest_dirs.strict_files_paths,
+        strict_dirs_paths=manifest_dirs.strict_dirs_paths,
         resourcepacks=new_resourcepacks,
         servers=new_servers,
         deleted=new_deleted,
         files=new_files,
     )
 
-    files_added: dict[str, str] = {}
-
     if new_manifest != old_manifest:
         new_manifest.version += 1
 
     save_manifest(instance_path, new_manifest)
 
-    return new_manifest, BuildPostResponse(
-        version=new_manifest.version,
-        api_version=new_manifest.api_version,
-        new_files_paths=new_manifest.files_paths,
-        new_dirs_paths=new_manifest.dirs_paths,
-        new_strict_files_paths=new_manifest.strict_files_paths,
-        new_strict_dirs_paths=new_manifest.strict_dirs_paths,
-        new_resourcepacks=new_manifest.resourcepacks,
-        new_servers=new_manifest.servers,
-        files_deleted=files_deleted,
-        files_edited=files_edited,
-        files_added=files_added,
+    return (
+        BuildPostResponse(
+            version=new_manifest.version,
+            api_version=new_manifest.api_version,
+            new_files_paths=new_manifest.files_paths,
+            new_dirs_paths=new_manifest.dirs_paths,
+            new_strict_files_paths=new_manifest.strict_files_paths,
+            new_strict_dirs_paths=new_manifest.strict_dirs_paths,
+            new_resourcepacks=new_manifest.resourcepacks,
+            new_servers=new_manifest.servers,
+            files_deleted=files_deleted,
+            files_edited=files_edited,
+            files_added=files_added,
+        )
+        if old_manifest is None or new_manifest.version != old_manifest.version
+        else new_manifest
     )
