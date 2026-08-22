@@ -64,11 +64,19 @@ def FileDownloadInfoV2toV1(path: str, data: FileDownloadInfo) -> DownloadFile:
 
 
 def UpdatePostResponseV2toV1(data: UpdatePostResponse) -> UpdateResponse:
+    old_dirs_paths = {
+        "minecraft/config",
+        "minecraft/mods",
+        "minecraft/resourcepacks",
+        "minecraft/xaero",
+    }
+
     data_v1 = UpdateResponse(
         version=0,
         download=[
             FileDownloadInfoV2toV1(file_path, file)
             for file_path, file in data.need_download.items()
+            if any(file_path.startswith(path) for path in old_dirs_paths)
         ],
         delete=list(data.need_delete),
         servers=list(data.new_servers),
