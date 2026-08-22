@@ -2,7 +2,7 @@ services:
   backend:
     build: .
     container_name: backend
-    restart: unless-stopped
+    restart: always
     ports:
       - "10033:10033"
     volumes:
