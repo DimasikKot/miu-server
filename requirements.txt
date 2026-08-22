@@ -1,3 +1,4 @@
 fastapi
 uvicorn
 pydantic
+nbtlib==1.12.1

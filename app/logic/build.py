@@ -6,8 +6,8 @@ from fastapi import HTTPException
 
 from api.v1.models import ServerManifest
 from api.v1.transformV1toV2 import InstanceManifestV1toV2
+from logic.get_servers import get_servers
 from models.FileInfo import FileInfo
-from models.ServerInfo import ServerInfo
 from models.server.BuildPostResponse import BuildPostResponse
 from models.server.InstanceManifest import InstanceManifest
 from config import settings
@@ -120,8 +120,7 @@ def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
 
 def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
     new_resourcepacks = get_resourcepacks(instance_path)
-    # TODO minecraft/servers.dat
-    new_servers: list[ServerInfo] = []
+    new_servers = get_servers(instance_path)
 
     old_manifest = load_manifest(instance_path)
     files_deleted: dict[str, str] = {}
