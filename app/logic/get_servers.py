@@ -16,7 +16,7 @@ def get_servers(minecraft_dir_path: Path) -> list[ServerInfo]:
 
     try:
         nbt_data = nbtlib.load(servers_path)  # type: ignore
-        servers_list = nbt_data["servers"]  # type: ignore
+        servers_list = nbt_data[""]["servers"]  # type: ignore
         for server_tag in servers_list:  # type: ignore
             name = server_tag.get("name", "Нет имени")  # type: ignore
             ip = server_tag.get("ip", "Нет IP")  # type: ignore
