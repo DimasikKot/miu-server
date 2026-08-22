@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 
-class MiuClientGetResponse(BaseModel):
+class MiuClientManifest(BaseModel):
     MiuClientFile: str
     PreLaunchCommand: str
     path: str

@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
 
-class MiuClientManifest(BaseModel):
+class MiuClientSettingsManifest(BaseModel):
     MiuClientFile: str
     PreLaunchCommand: str
