@@ -118,8 +118,32 @@ def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
     return []
 
 
+def get_incompatible_resourcepacks(minecraft_dir_path: Path) -> list[str]:
+    options_path = minecraft_dir_path / "minecraft/options.txt"
+
+    # Если файла нет, возвращаем пустой список
+    if not options_path.exists():
+        return []
+
+    with open(options_path, "r", encoding="utf-8") as file:
+        for line in file:
+            if line.startswith("incompatibleResourcePacks:"):
+                # Получаем часть строки после "incompatibleResourcePacks:" и убираем пробелы по краям
+                value = line[len("incompatibleResourcePacks:") :].strip()
+
+                # Убираем квадратные скобки по краям, если они есть (аналог substring в Java)
+                value = value.strip("[]")
+                if not value:
+                    return []
+
+                # Разделяем по запятой, убираем пробелы и кавычки у каждого элемента
+                return [part.strip().strip('"') for part in value.split(",")]
+    return []
+
+
 def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
     new_resourcepacks = get_resourcepacks(instance_path)
+    new_incompatible_resourcepacks = get_incompatible_resourcepacks(instance_path)
     new_servers = get_servers(instance_path)
 
     old_manifest = load_manifest(instance_path)
@@ -201,6 +225,7 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
         strict_files_paths=manifest_dirs.strict_files_paths,
         strict_dirs_paths=manifest_dirs.strict_dirs_paths,
         resourcepacks=new_resourcepacks,
+        incompatible_resourcepacks=new_incompatible_resourcepacks,
         servers=new_servers,
         deleted=new_deleted,
         files=new_files,
@@ -220,6 +245,7 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
             new_strict_files_paths=new_manifest.strict_files_paths,
             new_strict_dirs_paths=new_manifest.strict_dirs_paths,
             new_resourcepacks=new_manifest.resourcepacks,
+            new_incompatible_resourcepacks=new_manifest.incompatible_resourcepacks,
             new_servers=new_manifest.servers,
             files_deleted=files_deleted,
             files_edited=files_edited,

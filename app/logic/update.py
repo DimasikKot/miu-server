@@ -123,6 +123,28 @@ def compare_resourcepacks(
     return result
 
 
+def compare_incompatible_resourcepacks(
+    request_incompatible_resourcepacks: list[str], instance_incompatible_resourcepacks: list[str]
+) -> list[str]:
+    # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
+    result = request_incompatible_resourcepacks
+
+    # 2. Создаём множество из текущих ресурс паков клиента для быстрого поиска (O(1))
+    # Также это автоматически убирает возможные дубликаты, если они вдруг были в client_resource_packs
+    existing_resource_packs = set(result)
+
+    # 3. Проходим по списку ресурс паков
+    for resource_pack in instance_incompatible_resourcepacks:
+        # Если ресурс паков ещё нет у клиента, добавляем его в конец
+        if resource_pack not in existing_resource_packs:
+            result.append(resource_pack)
+            existing_resource_packs.add(
+                resource_pack
+            )  # Обновляем множество, чтобы не добавить его повторно
+
+    return result
+
+
 def compare(
     request: UpdatePostRequest,
     instance_manifest: InstanceManifest,
@@ -132,6 +154,9 @@ def compare(
     new_resourcepacks = compare_resourcepacks(
         request.resourcepacks, instance_manifest.resourcepacks
     )
+    new_incompatible_resourcepacks = compare_incompatible_resourcepacks(
+        request.incompatible_resourcepacks, instance_manifest.incompatible_resourcepacks
+    )
     new_servers = compare_servers(request.servers, instance_manifest.servers)
     need_delete = build_delete_list(request, instance_manifest)
     need_download = build_download_list(
@@ -140,6 +165,7 @@ def compare(
 
     return UpdatePostResponse(
         new_resourcepacks=new_resourcepacks,
+        new_incompatible_resourcepacks=new_incompatible_resourcepacks,
         new_servers=new_servers,
         need_delete=need_delete,
         need_download=need_download,
