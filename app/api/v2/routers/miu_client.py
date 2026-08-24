@@ -17,6 +17,9 @@ from config import settings
 router_miu_client: APIRouter = APIRouter()
 
 
+def escape_pre_launch_command(command: str) -> str:
+    return command.replace("\\", "\\\\").replace('"', '\\"')
+
 @router_miu_client.get("/{instance_name}", response_model=MiuClientGetResponse)
 def miu_client_get(request_class: Request,instance_name: str = Path(...,description="PurMur Vanilla . . PurMur Create . . PurMur Homestead",example="PurMur Vanilla")) -> MiuClientGetResponse:
     miu_client_manifest = load_miu_client_manifest()
@@ -34,7 +37,7 @@ def miu_client_get(request_class: Request,instance_name: str = Path(...,descript
     download_url = f"{str(request_class.base_url).rstrip("/")}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote("mmc-pack.json", safe='/')}"
 
     return MiuClientGetResponse(
-        pre_launch_command=miu_client_manifest.PreLaunchCommand,
+        pre_launch_command=escape_pre_launch_command(miu_client_manifest.PreLaunchCommand),
         miu_client_path=miu_client_manifest.MiuClientFile,
         miu_client_file=FileDownloadInfo(
             url=miu_client_manifest.url,
