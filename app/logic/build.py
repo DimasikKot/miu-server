@@ -95,8 +95,8 @@ def scan_files(
     return result
 
 
-def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
-    options_path = minecraft_dir_path / "minecraft/options.txt"
+def get_resourcepacks(instance_path: Path) -> list[str]:
+    options_path = instance_path / "minecraft/options.txt"
 
     # Если файла нет, возвращаем пустой список
     if not options_path.exists():
@@ -118,8 +118,8 @@ def get_resourcepacks(minecraft_dir_path: Path) -> list[str]:
     return []
 
 
-def get_incompatible_resourcepacks(minecraft_dir_path: Path) -> list[str]:
-    options_path = minecraft_dir_path / "minecraft/options.txt"
+def get_incompatible_resourcepacks(instance_path: Path) -> list[str]:
+    options_path = instance_path / "minecraft/options.txt"
 
     # Если файла нет, возвращаем пустой список
     if not options_path.exists():

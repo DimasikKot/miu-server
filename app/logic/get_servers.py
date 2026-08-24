@@ -5,8 +5,8 @@ import nbtlib  # type: ignore
 from models.ServerInfo import ServerInfo
 
 
-def get_servers(minecraft_dir_path: Path) -> list[ServerInfo]:
-    servers_path = minecraft_dir_path / "minecraft/servers.dat"
+def get_servers(instance_path: Path) -> list[ServerInfo]:
+    servers_path = instance_path / "minecraft/servers.dat"
 
     # Если файла нет, возвращаем пустой список
     if not servers_path.exists():

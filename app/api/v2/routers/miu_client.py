@@ -1,4 +1,6 @@
-from fastapi import APIRouter, HTTPException, Request
+from urllib.parse import quote
+
+from fastapi import APIRouter, HTTPException, Path, Request
 
 from logic.build import sha256
 from logic.miu_client import (
@@ -6,25 +8,45 @@ from logic.miu_client import (
     load_miu_client_settings_manifest,
     save_miu_client_manifest,
 )
-from models.MiuClientManifest import MiuClientManifest
+
+from models.MiuClientGetResponse import MiuClientGetResponse
+from models.FileDownloadInfo import FileDownloadInfo
+from models.server.MiuClientManifest import MiuClientManifest
 from config import settings
 
 router_miu_client: APIRouter = APIRouter()
 
 
-@router_miu_client.get("", response_model=MiuClientManifest)
-def miu_client_get() -> MiuClientManifest:
+@router_miu_client.get("/{instance_name}", response_model=MiuClientGetResponse)
+def miu_client_get(request_class: Request,instance_name: str = Path(...,description="PurMur Vanilla . . PurMur Create . . PurMur Homestead",example="PurMur Vanilla")) -> MiuClientGetResponse:
     miu_client_manifest = load_miu_client_manifest()
     if miu_client_manifest is None:
         raise HTTPException(404, "Miu-Client manifest not found")
 
-    return MiuClientManifest(
-        MiuClientFile=miu_client_manifest.MiuClientFile,
-        PreLaunchCommand=miu_client_manifest.PreLaunchCommand,
-        path=miu_client_manifest.MiuClientFile,
-        url=miu_client_manifest.url,
-        sha256=miu_client_manifest.sha256,
-        size=miu_client_manifest.size,
+    instance_path = settings.INSTANCES_DIR_PATH / instance_name
+    mmc_pack_path = instance_path / "mmc-pack.json"
+    if not instance_path.exists():
+        raise HTTPException(404, "Instance not found")
+    if not mmc_pack_path.exists():
+        raise HTTPException(404, "Mmc-pack not found")
+
+    relative = mmc_pack_path.relative_to(instance_path)
+    download_url = f"{str(request_class.base_url).rstrip("/")}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote(str(mmc_pack_path), safe='/')}"
+
+    return MiuClientGetResponse(
+        pre_launch_command=miu_client_manifest.PreLaunchCommand,
+        miu_client_path=miu_client_manifest.MiuClientFile,
+        miu_client_file=FileDownloadInfo(
+            url=miu_client_manifest.url,
+            sha256=miu_client_manifest.sha256,
+            size=miu_client_manifest.size
+            ),
+        mmc_pack_path = str(relative),
+        mmc_pack_file = FileDownloadInfo(
+            sha256=sha256(mmc_pack_path),
+            size=mmc_pack_path.stat().st_size,
+            url=download_url,
+            )
     )
 
 

@@ -1,6 +1,6 @@
 import json
 
-from models.MiuClientManifest import MiuClientManifest
+from models.server.MiuClientManifest import MiuClientManifest
 from models.server.MiuClientSettingsManifest import MiuClientSettingsManifest
 from config import settings
 
