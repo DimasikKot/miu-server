@@ -31,7 +31,7 @@ def miu_client_get(request_class: Request,instance_name: str = Path(...,descript
         raise HTTPException(404, "Mmc-pack not found")
 
     relative = mmc_pack_path.relative_to(instance_path)
-    download_url = f"{str(request_class.base_url).rstrip("/")}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote(str(mmc_pack_path), safe='/')}"
+    download_url = f"{str(request_class.base_url).rstrip("/")}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote("mmc-pack.json", safe='/')}"
 
     return MiuClientGetResponse(
         pre_launch_command=miu_client_manifest.PreLaunchCommand,
