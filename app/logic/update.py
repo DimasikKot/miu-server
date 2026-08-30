@@ -1,6 +1,7 @@
 from urllib.parse import quote
 
 from models.FileDownloadInfo import FileDownloadInfo
+from models.FileInfo import FileInfo
 from models.ServerInfo import ServerInfo
 from models.UpdatePostRequest import UpdatePostRequest
 from models.UpdatePostResponse import UpdatePostResponse
@@ -13,6 +14,26 @@ from config import settings
 def is_deleted(path: str, sha256: str, instance_manifest: InstanceManifest) -> bool:
     deleted = instance_manifest.deleted.get(path, [])
     return sha256 in deleted
+
+
+def get_local_file_info(request_files: dict[str, FileInfo], manifest_path: str) -> FileInfo | None:
+    """
+    Ищет файл в локальных файлах (request_files).
+    Считает .jar и .jar.disabled одним и тем же файлом.
+    """
+    # 1. Сначала ищем точное совпадение пути
+    if manifest_path in request_files:
+        return request_files[manifest_path]
+
+    # 2. Если точного совпадения нет, проверяем альтернативное расширение
+    if manifest_path.endswith('.jar.disabled'):
+        alt_path = manifest_path[:-9]  # Убираем '.disabled', оставляем '.jar'
+    elif manifest_path.endswith('.jar'):
+        alt_path = manifest_path + '.disabled'
+    else:
+        return None  # Файл не относится к .jar, альтернатив нет
+
+    return request_files.get(alt_path)
 
 
 def build_delete_list(
@@ -40,11 +61,16 @@ def build_download_list(
     base_url: str,
 ) -> dict[str, FileDownloadInfo]:
     need_download: dict[str, FileDownloadInfo] = {}
-    # Проходим по всем файлам внутри InstanceManifest
+    
+    # Проходим по всем файлам внутри InstanceManifest (желаемое состояние)
     for instance_file_path, instance_file in instance_manifest.files.items():
         download_url = f"{base_url}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
-        # Нет файла
-        if instance_file_path not in request.files.keys():
+        
+        # Ищем локальный файл, учитывая эквивалентность .jar и .jar.disabled
+        request_file = get_local_file_info(request.files, instance_file_path)
+
+        # Нет файла (ни .jar, ни .jar.disabled)
+        if request_file is None:
             need_download[instance_file_path] = FileDownloadInfo(
                 sha256=instance_file.sha256,
                 size=instance_file.size,
@@ -52,9 +78,7 @@ def build_download_list(
             )
             continue
 
-        request_file = request.files[instance_file_path]
-
-        # SHA совпадает
+        # SHA совпадает (файл есть локально в нужном или альтернативном виде, и он не изменен)
         if request_file.sha256 == instance_file.sha256:
             continue
 
@@ -151,9 +175,9 @@ def compare(
     instance_name: str,
     base_url: str,
 ) -> UpdatePostResponse:
-    new_resourcepacks = compare_resourcepacks(
-        request.resourcepacks, instance_manifest.resourcepacks
-    )
+    # new_resourcepacks = compare_resourcepacks(
+    #     request.resourcepacks, instance_manifest.resourcepacks
+    # )
     new_incompatible_resourcepacks = compare_incompatible_resourcepacks(
         request.incompatible_resourcepacks, instance_manifest.incompatible_resourcepacks
     )
@@ -164,7 +188,7 @@ def compare(
     )
 
     return UpdatePostResponse(
-        new_resourcepacks=new_resourcepacks,
+        new_resourcepacks=request.resourcepacks,
         new_incompatible_resourcepacks=new_incompatible_resourcepacks,
         new_servers=new_servers,
         need_delete=need_delete,

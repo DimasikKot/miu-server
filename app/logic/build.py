@@ -141,6 +141,15 @@ def get_incompatible_resourcepacks(instance_path: Path) -> list[str]:
     return []
 
 
+def get_alternative_path(path: str) -> str | None:
+    """Возвращает альтернативное имя файла (.jar <-> .jar.disabled), если применимо."""
+    if path.endswith(".jar.disabled"):
+        return path[:-9]  # Убираем '.disabled'
+    elif path.endswith(".jar"):
+        return path + ".disabled"
+    return None
+
+
 def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
     new_resourcepacks = get_resourcepacks(instance_path)
     new_incompatible_resourcepacks = get_incompatible_resourcepacks(instance_path)
@@ -170,6 +179,17 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
         # файл полностью новый
         for new_file_path, new_file in new_files.items():
             if new_file_path not in old_manifest.files:
+                # Проверяем, не является ли это простым переименованием .jar <-> .jar.disabled
+                alt_path = get_alternative_path(new_file_path)
+                if alt_path and alt_path in old_manifest.files:
+                    # Если файл существовал под альтернативным именем и его sha256 совпадает,
+                    # то это просто переименование, а не добавление нового файла.
+                    if old_manifest.files[alt_path].sha256 == new_file.sha256:
+                        # узнаём новые изменённые файлы
+                        print(f"file edited[{alt_path}] = {new_file.sha256}")
+                        files_edited[alt_path] = new_file.sha256
+                        continue
+
                 # узнаём новые файлы
                 print(f"file added[{new_file_path}] = {new_file.sha256}")
                 files_added[new_file_path] = new_file.sha256
@@ -178,8 +198,15 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
 
         # сравнение старого и нового манифеста
         for old_file_path, old_file in old_manifest.files.items():
-            # файл полностью удалили
-            if old_file_path not in new_files:
+            # Ищем файл в new_files по точному имени или альтернативному
+            actual_new_path = old_file_path if old_file_path in new_files else None
+            if actual_new_path is None:
+                alt_path = get_alternative_path(old_file_path)
+                if alt_path and alt_path in new_files:
+                    actual_new_path = alt_path
+
+            # файл полностью удалили (нет ни точного, ни альтернативного имени)
+            if actual_new_path is None:
                 new_deleted.setdefault(old_file_path, set())
                 if old_file.sha256 not in new_deleted[old_file_path]:
                     new_deleted[old_file_path].add(old_file.sha256)
@@ -188,10 +215,10 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
                     files_deleted[old_file_path] = old_file.sha256
                 continue
 
-            # уже существовал файл
-            edited_file = new_files[old_file_path]
+            # уже существовал файл (под точным или альтернативным именем)
+            edited_file = new_files[actual_new_path]
 
-            # файл изменился
+            # файл изменился (или был переименован с изменением содержимого)
             if edited_file.sha256 != old_file.sha256:
                 new_deleted.setdefault(old_file_path, set())
                 if old_file.sha256 not in new_deleted[old_file_path]:
@@ -205,8 +232,14 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
         for old_deleted_file_path, old_deleted_file_shas256 in list(
             new_deleted.items()
         ):
-            if old_deleted_file_path in new_files:
-                current_file = new_files[old_deleted_file_path]
+            # Проверяем наличие файла под точным или альтернативным именем
+            current_file = new_files.get(old_deleted_file_path)
+            if current_file is None:
+                alt_path = get_alternative_path(old_deleted_file_path)
+                if alt_path:
+                    current_file = new_files.get(alt_path)
+
+            if current_file:
                 new_deleted[old_deleted_file_path] = {
                     sha256
                     for sha256 in old_deleted_file_shas256
