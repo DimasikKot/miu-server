@@ -11,6 +11,63 @@ from models.ServerInfo import ServerInfo
 from config import settings
 
 
+def get_client_path(instance_file_path: str) -> str:
+    """
+    Определяет путь, по которому клиент должен сохранить файл.
+    Файлы из подпапок mods/server/, mods/client/, mods/disabled/
+    отдаются клиенту как файлы для папки mods/ (подпапка убирается,
+    остальная структура сохраняется).
+    """
+    parts = instance_file_path.replace('\\', '/').split('/')
+    try:
+        mods_idx = parts.index('mods')
+    except ValueError:
+        return instance_file_path
+
+    # Если 'mods' — последний элемент пути (не должно быть для файлов)
+    if mods_idx == len(parts) - 1:
+        return instance_file_path
+
+    next_part = parts[mods_idx + 1]
+    if next_part in ('server', 'client', 'disabled'):
+        # Убираем подпапку server/client/disabled, сохраняя остальное
+        new_parts = parts[:mods_idx + 1] + parts[mods_idx + 2:]
+        return '/'.join(new_parts)
+
+    return instance_file_path
+
+
+def get_server_paths(client_path: str) -> list[str]:
+    """
+    Возвращает список возможных серверных путей для данного клиентского пути.
+    Например, для 'minecraft/mods/xxx.jar' возвращает:
+    ['minecraft/mods/xxx.jar', 'minecraft/mods/server/xxx.jar', 'minecraft/mods/client/xxx.jar', 'minecraft/mods/disabled/xxx.jar']
+    """
+    parts = client_path.replace('\\', '/').split('/')
+    try:
+        mods_idx = parts.index('mods')
+    except ValueError:
+        return [client_path]
+    
+    if mods_idx == len(parts) - 1:
+        return [client_path]
+    
+    # Элементы после 'mods' (имя файла или подпапки + имя файла)
+    after_mods = parts[mods_idx + 1:]
+    
+    # Базовый путь (без подпапки)
+    base_path = '/'.join(parts[:mods_idx + 1] + after_mods)
+    
+    # Возможные подпапки
+    subdirs = ['server', 'client', 'disabled']
+    result = [base_path]
+    for subdir in subdirs:
+        subdir_path = '/'.join(parts[:mods_idx + 1] + [subdir] + after_mods)
+        result.append(subdir_path)
+    
+    return result
+
+
 # Проверяет, считается ли данный SHA удалённым
 def is_deleted(path: str, sha256: str, instance_manifest: InstanceManifest) -> bool:
     deleted = instance_manifest.deleted.get(path, [])
@@ -32,27 +89,53 @@ def build_delete_list(
 ) -> set[str]:
     need_delete: set[str] = set()
     for request_file_path, request_file in request.files.items():
-        # Ищем файл на сервере по точному или альтернативному имени
-        server_file = instance_manifest.files.get(request_file_path)
-        if server_file is None:
-            alt_path = get_alternative_path(request_file_path)
-            if alt_path:
-                server_file = instance_manifest.files.get(alt_path)
+        # Нормализуем путь клиента
+        client_path = get_client_path(request_file_path)
         
-        # Если файл есть на сервере (под любым именем)
+        # Получаем все возможные серверные пути для данного клиентского пути
+        server_paths = get_server_paths(client_path)
+        
+        # Ищем файл на сервере
+        server_file = None
+        server_path = None
+        for sp in server_paths:
+            sf = instance_manifest.files.get(sp)
+            if sf is not None:
+                server_file = sf
+                server_path = sp
+                break
+        
+        # Если не нашли по точному пути, пробуем альтернативные (.jar <-> .jar.disabled)
+        if server_file is None:
+            for sp in server_paths:
+                alt_sp = get_alternative_path(sp)
+                if alt_sp:
+                    sf = instance_manifest.files.get(alt_sp)
+                    if sf is not None:
+                        server_file = sf
+                        server_path = alt_sp
+                        break
+        
+        # Если файл есть на сервере
         if server_file is not None:
             # Если SHA клиента совпадает с серверным SHA — не удаляем
             if request_file.sha256 == server_file.sha256:
                 continue
             # Если SHA клиента совпадает с одним из старых SHA — удаляем
-            if is_deleted_with_alt(request_file_path, request_file.sha256, instance_manifest):
-                need_delete.add(request_file_path)
+            if server_path and is_deleted_with_alt(server_path, request_file.sha256, instance_manifest):
+                need_delete.add(client_path)
             continue
         
-        # Если файла больше нет на сервере (ни под точным, ни под альтернативным именем)
-        if is_deleted_with_alt(request_file_path, request_file.sha256, instance_manifest):
-            need_delete.add(request_file_path)
-
+        # Если файла больше нет на сервере — проверяем все возможные серверные пути
+        deleted = False
+        for sp in server_paths:
+            if is_deleted_with_alt(sp, request_file.sha256, instance_manifest):
+                deleted = True
+                break
+        
+        if deleted:
+            need_delete.add(client_path)
+    
     return need_delete
 
 
@@ -83,42 +166,46 @@ def build_download_list(
     base_url: str,
 ) -> dict[str, FileDownloadInfo]:
     need_download: dict[str, FileDownloadInfo] = {}
-    
-    # Проходим по всем файлам внутри InstanceManifest (желаемое состояние)
-    for instance_file_path, instance_file in instance_manifest.files.items():
-        download_url = f"{base_url}{settings.INSTANCES_DIR_PATH}/{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
-        
-        # Ищем локальный файл, учитывая эквивалентность .jar и .jar.disabled
-        request_file = get_local_file_info(request.files, instance_file_path)
 
-        # Нет файла (ни .jar, ни .jar.disabled)
+    for instance_file_path, instance_file in instance_manifest.files.items():
+        # URL — реальный серверный путь, чтобы файл точно скачался
+        download_url = (
+            f"{base_url}{settings.INSTANCES_DIR_PATH}/"
+            f"{quote(instance_name)}/{quote(instance_file_path, safe='/')}"
+        )
+
+        # Путь, по которому клиент должен сохранить файл
+        client_path = get_client_path(instance_file_path)
+
+        # Ищем локальный файл клиента по клиентскому пути
+        request_file = get_local_file_info(request.files, client_path)
+
+        # Нет файла (ни .jar, ни .jar.disabled) — нужно скачать
         if request_file is None:
-            need_download[instance_file_path] = FileDownloadInfo(
+            need_download[client_path] = FileDownloadInfo(
                 sha256=instance_file.sha256,
                 size=instance_file.size,
                 url=download_url,
             )
             continue
 
-        # SHA совпадает (файл есть локально в нужном или альтернативном виде, и он не изменен)
+        # SHA совпадает — файл актуален, не скачиваем
         if request_file.sha256 == instance_file.sha256:
             continue
 
-        # SHA отличается и это строгое место
-        if instance_file_path in instance_manifest.strict_files_paths:
-            need_download[instance_file_path] = FileDownloadInfo(
-                sha256=instance_file.sha256,
-                size=instance_file.size,
-                url=download_url,
+        # Проверяем "строгость" и по клиентскому, и по серверному пути,
+        # чтобы корректно срабатывало независимо от того, как заполнен manifest
+        is_strict = (
+            client_path in instance_manifest.strict_files_paths
+            or instance_file_path in instance_manifest.strict_files_paths
+            or any(
+                client_path.startswith(folder) or instance_file_path.startswith(folder)
+                for folder in instance_manifest.strict_dirs_paths
             )
-            continue
+        )
 
-        # SHA отличается и это строгое место (например, моды)
-        if any(
-            instance_file_path.startswith(folder)
-            for folder in instance_manifest.strict_dirs_paths
-        ):
-            need_download[instance_file_path] = FileDownloadInfo(
+        if is_strict:
+            need_download[client_path] = FileDownloadInfo(
                 sha256=instance_file.sha256,
                 size=instance_file.size,
                 url=download_url,
@@ -197,9 +284,12 @@ def compare(
     instance_name: str,
     base_url: str,
 ) -> UpdatePostResponse:
-    # new_resourcepacks = compare_resourcepacks(
-    #     request.resourcepacks, instance_manifest.resourcepacks
-    # )
+    if request.resourcepacks == []:
+        new_resourcepacks = compare_resourcepacks(
+            request.resourcepacks, instance_manifest.resourcepacks
+        )
+    else:
+        new_resourcepacks = request.resourcepacks
     new_incompatible_resourcepacks = compare_incompatible_resourcepacks(
         request.incompatible_resourcepacks, instance_manifest.incompatible_resourcepacks
     )
@@ -210,7 +300,7 @@ def compare(
     )
 
     return UpdatePostResponse(
-        new_resourcepacks=request.resourcepacks,
+        new_resourcepacks=new_resourcepacks,
         new_incompatible_resourcepacks=new_incompatible_resourcepacks,
         new_servers=new_servers,
         need_delete=need_delete,
