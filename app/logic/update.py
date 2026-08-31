@@ -1,5 +1,6 @@
 from urllib.parse import quote
 
+from logic.build import get_alternative_path
 from models.FileDownloadInfo import FileDownloadInfo
 from models.FileInfo import FileInfo
 from models.ServerInfo import ServerInfo
@@ -14,6 +15,45 @@ from config import settings
 def is_deleted(path: str, sha256: str, instance_manifest: InstanceManifest) -> bool:
     deleted = instance_manifest.deleted.get(path, [])
     return sha256 in deleted
+
+
+def is_deleted_with_alt(path: str, sha256: str, manifest: InstanceManifest) -> bool:
+    """Проверяет, является ли файл удалённым, учитывая альтернативные имена (.jar <-> .jar.disabled)."""
+    if is_deleted(path, sha256, manifest):
+        return True
+    alt_path = get_alternative_path(path)
+    if alt_path and is_deleted(alt_path, sha256, manifest):
+        return True
+    return False
+
+
+def build_delete_list(
+    request: UpdatePostRequest, instance_manifest: InstanceManifest
+) -> set[str]:
+    need_delete: set[str] = set()
+    for request_file_path, request_file in request.files.items():
+        # Ищем файл на сервере по точному или альтернативному имени
+        server_file = instance_manifest.files.get(request_file_path)
+        if server_file is None:
+            alt_path = get_alternative_path(request_file_path)
+            if alt_path:
+                server_file = instance_manifest.files.get(alt_path)
+        
+        # Если файл есть на сервере (под любым именем)
+        if server_file is not None:
+            # Если SHA клиента совпадает с серверным SHA — не удаляем
+            if request_file.sha256 == server_file.sha256:
+                continue
+            # Если SHA клиента совпадает с одним из старых SHA — удаляем
+            if is_deleted_with_alt(request_file_path, request_file.sha256, instance_manifest):
+                need_delete.add(request_file_path)
+            continue
+        
+        # Если файла больше нет на сервере (ни под точным, ни под альтернативным именем)
+        if is_deleted_with_alt(request_file_path, request_file.sha256, instance_manifest):
+            need_delete.add(request_file_path)
+
+    return need_delete
 
 
 def get_local_file_info(request_files: dict[str, FileInfo], manifest_path: str) -> FileInfo | None:
@@ -34,24 +74,6 @@ def get_local_file_info(request_files: dict[str, FileInfo], manifest_path: str) 
         return None  # Файл не относится к .jar, альтернатив нет
 
     return request_files.get(alt_path)
-
-
-def build_delete_list(
-    request: UpdatePostRequest, instance_manifest: InstanceManifest
-) -> set[str]:
-    need_delete: set[str] = set()
-    for request_file_path, request_file in request.files.items():
-        # Если файла больше нет на сервере, но его SHA находится в removed
-        if request_file_path not in instance_manifest.files.keys():
-            if is_deleted(request_file_path, request_file.sha256, instance_manifest):
-                need_delete.add(request_file_path)
-            continue
-
-        # Если SHA клиента совпадает с одним из старых SHA
-        if is_deleted(request_file_path, request_file.sha256, instance_manifest):
-            need_delete.add(request_file_path)
-
-    return need_delete
 
 
 def build_download_list(
