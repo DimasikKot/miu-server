@@ -38,8 +38,6 @@ def miu_client_get(
     instance_path = resolve_instance_path(instance_name)
     finded_name = instance_path.name
     mmc_pack_path = instance_path / "mmc-pack.json"
-    if not instance_path.exists():
-        raise HTTPException(404, "Instance not found")
     if not mmc_pack_path.exists():
         raise HTTPException(404, "Mmc-pack not found")
 
