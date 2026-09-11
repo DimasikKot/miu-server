@@ -8,6 +8,7 @@ from api.v1.models import ServerManifest
 from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from logic.get_servers import get_servers
 from models.FileInfo import FileInfo
+from models.ServerInfo import ServerInfo
 from models.server.BuildPostResponse import BuildPostResponse
 from models.server.InstanceManifest import InstanceManifest
 from config import settings
@@ -141,6 +142,32 @@ def get_incompatible_resourcepacks(instance_path: Path) -> list[str]:
     return []
 
 
+def _diff_sets(new_set: set[str], old_set: set[str] | None) -> set[str]:
+    """Возвращает элементы new_list, которых не было в old_list (с сохранением порядка)."""
+    if old_set is None:
+        return set(new_set)
+    old_set = set(old_set)
+    return {item for item in new_set if item not in old_set}
+
+
+def _diff_lists(new_list: list[str], old_list: list[str] | None) -> list[str]:
+    """Возвращает элементы new_list, которых не было в old_list (с сохранением порядка)."""
+    if old_list is None:
+        return list(new_list)
+    old_set = set(old_list)
+    return [item for item in new_list if item not in old_set]
+
+
+def _diff_servers(new_servers: list[ServerInfo], old_servers: list[ServerInfo]):
+    """Возвращает серверы из new_servers, которых не было в old_servers."""
+
+    def key(s: ServerInfo):
+        return (s.name, s.ip)
+
+    old_keys = {key(s) for s in old_servers}
+    return [s for s in new_servers if key(s) not in old_keys]
+
+
 def get_alternative_path(path: str) -> str | None:
     """Возвращает альтернативное имя файла (.jar <-> .jar.disabled), если применимо."""
     if path.endswith(".jar.disabled"):
@@ -269,6 +296,37 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
 
     save_manifest(instance_path, new_manifest)
 
+    if old_manifest is not None and new_manifest.version != old_manifest.version:
+
+        return BuildPostResponse(
+            version=new_manifest.version,
+            api_version=new_manifest.api_version,
+            new_files_paths=_diff_sets(
+                new_manifest.files_paths, old_manifest.files_paths
+            ),
+            new_dirs_paths=_diff_sets(new_manifest.dirs_paths, old_manifest.dirs_paths),
+            new_strict_files_paths=_diff_sets(
+                new_manifest.strict_files_paths, old_manifest.strict_files_paths
+            ),
+            new_strict_dirs_paths=_diff_sets(
+                new_manifest.strict_dirs_paths, old_manifest.strict_dirs_paths
+            ),
+            new_resourcepacks=_diff_lists(
+                new_manifest.resourcepacks, old_manifest.resourcepacks
+            ),
+            new_incompatible_resourcepacks=_diff_lists(
+                new_manifest.incompatible_resourcepacks,
+                old_manifest.incompatible_resourcepacks,
+            ),
+            new_servers=_diff_servers(
+                new_manifest.servers,
+                old_manifest.servers,
+            ),
+            files_deleted=files_deleted,
+            files_edited=files_edited,
+            files_added=files_added,
+        )
+
     return (
         BuildPostResponse(
             version=new_manifest.version,
@@ -284,6 +342,6 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
             files_edited=files_edited,
             files_added=files_added,
         )
-        if old_manifest is None or new_manifest.version != old_manifest.version
+        if old_manifest is None
         else new_manifest
     )
