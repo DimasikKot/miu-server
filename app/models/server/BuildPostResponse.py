@@ -18,6 +18,9 @@ class BuildPostResponse(BaseModel):
 
 
 class ReBuildPostResponse(BaseModel):
+    version: int
+    api_version: int
+
     new_files_paths: set[str] = Field(default_factory=set)
     del_files_paths: set[str] = Field(default_factory=set)
     new_dirs_paths: set[str] = Field(default_factory=set)

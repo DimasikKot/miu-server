@@ -322,8 +322,6 @@ def build_manifest(
         files=new_files,
     )
 
-    save_manifest(instance_path / settings.MANIFEST_NAME, new_manifest)
-
     if old_manifest is not None and new_manifest != old_manifest:
         new_manifest.version += 1
         save_manifest(
@@ -333,6 +331,9 @@ def build_manifest(
             old_manifest,
         )
 
+    save_manifest(instance_path / settings.MANIFEST_NAME, new_manifest)
+
+    if old_manifest is not None and new_manifest != old_manifest:
         response = ReBuildPostResponse(
             version=new_manifest.version,
             api_version=new_manifest.api_version,
