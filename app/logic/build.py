@@ -9,7 +9,7 @@ from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from logic.get_servers import get_servers
 from models.FileInfo import FileInfo
 from models.ServerInfo import ServerInfo
-from models.server.BuildPostResponse import BuildPostResponse
+from models.server.BuildPostResponse import BuildPostResponse, ReBuildPostResponse
 from models.server.InstanceManifest import InstanceManifest
 from config import settings
 from models.server.InstanceManifestDirs import InstanceManifestDirs
@@ -177,7 +177,9 @@ def get_alternative_path(path: str) -> str | None:
     return None
 
 
-def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
+def build_manifest(
+    instance_path: Path,
+) -> BuildPostResponse | ReBuildPostResponse | InstanceManifest:
     new_resourcepacks = get_resourcepacks(instance_path)
     new_incompatible_resourcepacks = get_incompatible_resourcepacks(instance_path)
     new_servers = get_servers(instance_path)
@@ -298,30 +300,45 @@ def build_manifest(instance_path: Path) -> BuildPostResponse | InstanceManifest:
 
     if old_manifest is not None and new_manifest.version != old_manifest.version:
 
-        return BuildPostResponse(
+        return ReBuildPostResponse(
             version=new_manifest.version,
             api_version=new_manifest.api_version,
+            del_files_paths=_diff_sets(
+                old_manifest.files_paths, new_manifest.files_paths
+            ),
             new_files_paths=_diff_sets(
                 new_manifest.files_paths, old_manifest.files_paths
             ),
+            del_dirs_paths=_diff_sets(old_manifest.dirs_paths, new_manifest.dirs_paths),
             new_dirs_paths=_diff_sets(new_manifest.dirs_paths, old_manifest.dirs_paths),
+            del_strict_files_paths=_diff_sets(
+                old_manifest.strict_files_paths, new_manifest.strict_files_paths
+            ),
             new_strict_files_paths=_diff_sets(
                 new_manifest.strict_files_paths, old_manifest.strict_files_paths
+            ),
+            del_strict_dirs_paths=_diff_sets(
+                old_manifest.strict_dirs_paths, new_manifest.strict_dirs_paths
             ),
             new_strict_dirs_paths=_diff_sets(
                 new_manifest.strict_dirs_paths, old_manifest.strict_dirs_paths
             ),
+            del_resourcepacks=_diff_lists(
+                old_manifest.resourcepacks, new_manifest.resourcepacks
+            ),
             new_resourcepacks=_diff_lists(
                 new_manifest.resourcepacks, old_manifest.resourcepacks
+            ),
+            del_incompatible_resourcepacks=_diff_lists(
+                old_manifest.incompatible_resourcepacks,
+                new_manifest.incompatible_resourcepacks,
             ),
             new_incompatible_resourcepacks=_diff_lists(
                 new_manifest.incompatible_resourcepacks,
                 old_manifest.incompatible_resourcepacks,
             ),
-            new_servers=_diff_servers(
-                new_manifest.servers,
-                old_manifest.servers,
-            ),
+            del_servers=_diff_servers(old_manifest.servers, new_manifest.servers),
+            new_servers=_diff_servers(new_manifest.servers, old_manifest.servers),
             files_deleted=files_deleted,
             files_edited=files_edited,
             files_added=files_added,
