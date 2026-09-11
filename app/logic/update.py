@@ -18,9 +18,9 @@ def get_client_path(instance_file_path: str) -> str:
     отдаются клиенту как файлы для папки mods/ (подпапка убирается,
     остальная структура сохраняется).
     """
-    parts = instance_file_path.replace('\\', '/').split('/')
+    parts = instance_file_path.replace("\\", "/").split("/")
     try:
-        mods_idx = parts.index('mods')
+        mods_idx = parts.index("mods")
     except ValueError:
         return instance_file_path
 
@@ -29,10 +29,10 @@ def get_client_path(instance_file_path: str) -> str:
         return instance_file_path
 
     next_part = parts[mods_idx + 1]
-    if next_part in ('server', 'client', 'disabled'):
+    if next_part in ("server", "client", "disabled"):
         # Убираем подпапку server/client/disabled, сохраняя остальное
-        new_parts = parts[:mods_idx + 1] + parts[mods_idx + 2:]
-        return '/'.join(new_parts)
+        new_parts = parts[: mods_idx + 1] + parts[mods_idx + 2 :]
+        return "/".join(new_parts)
 
     return instance_file_path
 
@@ -43,28 +43,28 @@ def get_server_paths(client_path: str) -> list[str]:
     Например, для 'minecraft/mods/xxx.jar' возвращает:
     ['minecraft/mods/xxx.jar', 'minecraft/mods/server/xxx.jar', 'minecraft/mods/client/xxx.jar', 'minecraft/mods/disabled/xxx.jar']
     """
-    parts = client_path.replace('\\', '/').split('/')
+    parts = client_path.replace("\\", "/").split("/")
     try:
-        mods_idx = parts.index('mods')
+        mods_idx = parts.index("mods")
     except ValueError:
         return [client_path]
-    
+
     if mods_idx == len(parts) - 1:
         return [client_path]
-    
+
     # Элементы после 'mods' (имя файла или подпапки + имя файла)
-    after_mods = parts[mods_idx + 1:]
-    
+    after_mods = parts[mods_idx + 1 :]
+
     # Базовый путь (без подпапки)
-    base_path = '/'.join(parts[:mods_idx + 1] + after_mods)
-    
+    base_path = "/".join(parts[: mods_idx + 1] + after_mods)
+
     # Возможные подпапки
-    subdirs = ['server', 'client', 'disabled']
+    subdirs = ["server", "client", "disabled"]
     result = [base_path]
     for subdir in subdirs:
-        subdir_path = '/'.join(parts[:mods_idx + 1] + [subdir] + after_mods)
+        subdir_path = "/".join(parts[: mods_idx + 1] + [subdir] + after_mods)
         result.append(subdir_path)
-    
+
     return result
 
 
@@ -91,10 +91,10 @@ def build_delete_list(
     for request_file_path, request_file in request.files.items():
         # Нормализуем путь клиента
         client_path = get_client_path(request_file_path)
-        
+
         # Получаем все возможные серверные пути для данного клиентского пути
         server_paths = get_server_paths(client_path)
-        
+
         # Ищем файл на сервере
         server_file = None
         server_path = None
@@ -104,7 +104,7 @@ def build_delete_list(
                 server_file = sf
                 server_path = sp
                 break
-        
+
         # Если не нашли по точному пути, пробуем альтернативные (.jar <-> .jar.disabled)
         if server_file is None:
             for sp in server_paths:
@@ -115,31 +115,35 @@ def build_delete_list(
                         server_file = sf
                         server_path = alt_sp
                         break
-        
+
         # Если файл есть на сервере
         if server_file is not None:
             # Если SHA клиента совпадает с серверным SHA — не удаляем
             if request_file.sha256 == server_file.sha256:
                 continue
             # Если SHA клиента совпадает с одним из старых SHA — удаляем
-            if server_path and is_deleted_with_alt(server_path, request_file.sha256, instance_manifest):
+            if server_path and is_deleted_with_alt(
+                server_path, request_file.sha256, instance_manifest
+            ):
                 need_delete.add(client_path)
             continue
-        
+
         # Если файла больше нет на сервере — проверяем все возможные серверные пути
         deleted = False
         for sp in server_paths:
             if is_deleted_with_alt(sp, request_file.sha256, instance_manifest):
                 deleted = True
                 break
-        
+
         if deleted:
             need_delete.add(client_path)
-    
+
     return need_delete
 
 
-def get_local_file_info(request_files: dict[str, FileInfo], manifest_path: str) -> FileInfo | None:
+def get_local_file_info(
+    request_files: dict[str, FileInfo], manifest_path: str
+) -> FileInfo | None:
     """
     Ищет файл в локальных файлах (request_files).
     Считает .jar и .jar.disabled одним и тем же файлом.
@@ -149,10 +153,10 @@ def get_local_file_info(request_files: dict[str, FileInfo], manifest_path: str) 
         return request_files[manifest_path]
 
     # 2. Если точного совпадения нет, проверяем альтернативное расширение
-    if manifest_path.endswith('.jar.disabled'):
+    if manifest_path.endswith(".jar.disabled"):
         alt_path = manifest_path[:-9]  # Убираем '.disabled', оставляем '.jar'
-    elif manifest_path.endswith('.jar'):
-        alt_path = manifest_path + '.disabled'
+    elif manifest_path.endswith(".jar"):
+        alt_path = manifest_path + ".disabled"
     else:
         return None  # Файл не относится к .jar, альтернатив нет
 
@@ -257,7 +261,8 @@ def compare_resourcepacks(
 
 
 def compare_incompatible_resourcepacks(
-    request_incompatible_resourcepacks: list[str], instance_incompatible_resourcepacks: list[str]
+    request_incompatible_resourcepacks: list[str],
+    instance_incompatible_resourcepacks: list[str],
 ) -> list[str]:
     # 1. Создаём копию списка клиента, чтобы не изменять исходный массив
     result = request_incompatible_resourcepacks
