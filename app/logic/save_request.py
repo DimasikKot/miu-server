@@ -20,7 +20,14 @@ def save_request(
         / f"{host}={port}{time.strftime(' %Y-%m-%d %H-%M-%S')}.request.json"
     )
 
+    save_temp = UpdatePostRequest(
+        resourcepacks=request.resourcepacks,
+        incompatible_resourcepacks=request.incompatible_resourcepacks,
+        servers=request.servers,
+        files={},
+    )
+
     file_path.parent.mkdir(parents=True, exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as f:
-        json_str = request.model_dump_json(indent=2, warnings=False)
+        json_str = save_temp.model_dump_json(indent=2, warnings=False)
         f.write(json_str)
