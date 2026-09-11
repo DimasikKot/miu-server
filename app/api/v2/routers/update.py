@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path, Request
 
 from logic.resolve_instance_path import resolve_instance_path
+from logic.save_request import save_request
 from logic.update import compare
 from logic.build import load_manifest
 from models.UpdateGetResponse import UpdateGetResponse
@@ -48,6 +49,8 @@ def update_post(
     instance_manifest = load_manifest(instance_path)
     if instance_manifest is None:
         raise HTTPException(500, "Manifest missing")
+
+    save_request(instance_path, request, request_class)
 
     response = compare(
         request=request,
