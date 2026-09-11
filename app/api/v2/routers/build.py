@@ -11,6 +11,7 @@ router_build: APIRouter = APIRouter()
 @router_build.post(
     "/{instance_name}",
     response_model=BuildPostResponse | ReBuildPostResponse | InstanceManifest,
+    response_model_exclude_defaults=True,
 )
 def build_post(
     instance_name: str = Path(
