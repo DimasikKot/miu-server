@@ -17,7 +17,7 @@ def build_post(
     instance_name: str = Path(
         ...,
         description="PurMur Vanilla . . PurMur Create . . PurMur Homestead",
-        example="PurMur Vanilla",
+        example="PurMur Create",
     )
 ) -> BuildPostResponse | ReBuildPostResponse | InstanceManifest:
     instance_path = resolve_instance_path(instance_name)
