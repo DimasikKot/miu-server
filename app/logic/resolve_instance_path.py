@@ -1,5 +1,5 @@
+from pathlib import Path
 import re
-import pathlib
 from fastapi import HTTPException
 
 from config import settings
@@ -10,7 +10,7 @@ def canon(s: str) -> str:
     return re.sub(r"\s+", "", s).lower()
 
 
-def resolve_instance_path(instance_name: str) -> pathlib.Path:
+def resolve_instance_path(instance_name: str) -> Path:
     """
     Находит папку инстанса по имени.
     1. Точное совпадение.

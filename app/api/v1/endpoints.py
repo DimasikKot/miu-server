@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Path, Request
 
 from api.v1.models import ClientManifest, UpdateResponse
 from api.v1.transformV1toV2 import UpdatePostRequestV1toV2, UpdatePostResponseV2toV1
-from config import settings
+from logic.resolve_instance_path import resolve_instance_path
 from logic.update import compare
 from logic.build import load_manifest
 
@@ -21,9 +21,8 @@ def update(
 ) -> UpdateResponse:
     request_v2 = UpdatePostRequestV1toV2(data=request)
 
-    instance_path = settings.INSTANCES_DIR_PATH / instance_name
-    if not instance_path.exists():
-        raise HTTPException(404, "Instance not found")
+    instance_path = resolve_instance_path(instance_name)
+    finded_name = instance_path.name
 
     instance_manifest = load_manifest(instance_path)
     if instance_manifest is None:
@@ -32,7 +31,7 @@ def update(
     response = compare(
         request=request_v2,
         instance_manifest=instance_manifest,
-        instance_name=instance_name,
+        instance_name=finded_name,
         base_url=str(request_class.base_url).rstrip("/"),
     )
 

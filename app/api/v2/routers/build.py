@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path
 
+from logic.resolve_instance_path import resolve_instance_path
 from models.server.BuildPostResponse import BuildPostResponse
-from config import settings
 from logic.build import build_manifest
 from models.server.InstanceManifest import InstanceManifest
 
@@ -18,7 +18,7 @@ def build_post(
         example="PurMur Vanilla",
     )
 ) -> BuildPostResponse | InstanceManifest:
-    instance_path = settings.INSTANCES_DIR_PATH / instance_name
+    instance_path = resolve_instance_path(instance_name)
     if not instance_path.exists():
         raise HTTPException(404, "Instance not found")
 
