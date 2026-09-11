@@ -41,9 +41,18 @@ def load_manifest_dirs(instance_path: Path) -> InstanceManifestDirs | None:
 
 
 def save_manifest(instance_path: Path, manifest: InstanceManifest):
-    with open(instance_path / settings.MANIFEST_NAME, "w", encoding="utf-8") as f:
+    instance_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(instance_path, "w", encoding="utf-8") as f:
         # json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
         json_str = manifest.model_dump_json(indent=2, warnings=False)
+        f.write(json_str)
+
+
+def save_response(instance_path: Path, response: ReBuildPostResponse):
+    instance_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(instance_path, "w", encoding="utf-8") as f:
+        # json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
+        json_str = response.model_dump_json(indent=2, warnings=False)
         f.write(json_str)
 
 
@@ -313,13 +322,18 @@ def build_manifest(
         files=new_files,
     )
 
+    save_manifest(instance_path / settings.MANIFEST_NAME, new_manifest)
+
     if old_manifest is not None and new_manifest != old_manifest:
         new_manifest.version += 1
+        save_manifest(
+            instance_path
+            / "old"
+            / (f"ver{old_manifest.version}." + settings.MANIFEST_NAME),
+            old_manifest,
+        )
 
-    save_manifest(instance_path, new_manifest)
-
-    if old_manifest is not None and new_manifest.version != old_manifest.version:
-        return ReBuildPostResponse(
+        response = ReBuildPostResponse(
             version=new_manifest.version,
             api_version=new_manifest.api_version,
             del_files_paths=_diff_sets(
@@ -364,6 +378,14 @@ def build_manifest(
             files_strict_edited=files_strict_edited,
             files_added=files_added,
         )
+
+        save_response(
+            instance_path
+            / "old"
+            / (f"ver{old_manifest.version}-{new_manifest.version}." + "response.json"),
+            response,
+        )
+        return response
 
     return (
         BuildPostResponse(
