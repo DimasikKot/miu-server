@@ -177,6 +177,12 @@ def get_alternative_path(path: str) -> str | None:
     return None
 
 
+def _is_strict(path: str, dirs: InstanceManifestDirs) -> bool:
+    if path in dirs.strict_files_paths:
+        return True
+    return any(path.startswith(d.rstrip("/") + "/") for d in dirs.strict_dirs_paths)
+
+
 def build_manifest(
     instance_path: Path,
 ) -> BuildPostResponse | ReBuildPostResponse | InstanceManifest:
@@ -186,7 +192,9 @@ def build_manifest(
 
     old_manifest = load_manifest(instance_path)
     files_deleted: dict[str, str] = {}
+    files_strict_deleted: dict[str, str] = {}
     files_edited: dict[str, str] = {}
+    files_strict_edited: dict[str, str] = {}
     files_added: dict[str, str] = {}
 
     manifest_dirs = load_manifest_dirs(instance_path)
@@ -236,9 +244,15 @@ def build_manifest(
 
             # файл полностью удалили (нет ни точного, ни альтернативного имени)
             if actual_new_path is None:
-                new_deleted.setdefault(old_file_path, set())
-                if old_file.sha256 not in new_deleted[old_file_path]:
-                    new_deleted[old_file_path].add(old_file.sha256)
+                if _is_strict(old_file_path, manifest_dirs):
+                    # узнаём новые удалённые файлы
+                    print(f"file strict deleted[{old_file_path}] = {old_file.sha256}")
+                    files_strict_deleted[old_file_path] = old_file.sha256
+
+                    new_deleted.setdefault(old_file_path, set())
+                    if old_file.sha256 not in new_deleted[old_file_path]:
+                        new_deleted[old_file_path].add(old_file.sha256)
+                else:
                     # узнаём новые удалённые файлы
                     print(f"file deleted[{old_file_path}] = {old_file.sha256}")
                     files_deleted[old_file_path] = old_file.sha256
@@ -249,10 +263,16 @@ def build_manifest(
 
             # файл изменился (или был переименован с изменением содержимого)
             if edited_file.sha256 != old_file.sha256:
-                new_deleted.setdefault(old_file_path, set())
-                if old_file.sha256 not in new_deleted[old_file_path]:
-                    new_deleted[old_file_path].add(old_file.sha256)
-                    # узнаём новые изменённые файлы
+                if _is_strict(old_file_path, manifest_dirs):
+                    # узнаём новые удалённые файлы
+                    print(f"file strict edited[{old_file_path}] = {old_file.sha256}")
+                    files_strict_edited[old_file_path] = old_file.sha256
+
+                    new_deleted.setdefault(old_file_path, set())
+                    if old_file.sha256 not in new_deleted[old_file_path]:
+                        new_deleted[old_file_path].add(old_file.sha256)
+                else:
+                    # узнаём новые удалённые файлы
                     print(f"file edited[{old_file_path}] = {old_file.sha256}")
                     files_edited[old_file_path] = old_file.sha256
 
@@ -293,13 +313,12 @@ def build_manifest(
         files=new_files,
     )
 
-    if new_manifest != old_manifest:
+    if old_manifest is not None and new_manifest != old_manifest:
         new_manifest.version += 1
 
     save_manifest(instance_path, new_manifest)
 
     if old_manifest is not None and new_manifest.version != old_manifest.version:
-
         return ReBuildPostResponse(
             version=new_manifest.version,
             api_version=new_manifest.api_version,
@@ -340,7 +359,9 @@ def build_manifest(
             del_servers=_diff_servers(old_manifest.servers, new_manifest.servers),
             new_servers=_diff_servers(new_manifest.servers, old_manifest.servers),
             files_deleted=files_deleted,
+            files_strict_deleted=files_strict_deleted,
             files_edited=files_edited,
+            files_strict_edited=files_strict_edited,
             files_added=files_added,
         )
 
@@ -355,9 +376,6 @@ def build_manifest(
             new_resourcepacks=new_manifest.resourcepacks,
             new_incompatible_resourcepacks=new_manifest.incompatible_resourcepacks,
             new_servers=new_manifest.servers,
-            files_deleted=files_deleted,
-            files_edited=files_edited,
-            files_added=files_added,
         )
         if old_manifest is None
         else new_manifest
