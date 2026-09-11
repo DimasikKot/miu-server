@@ -13,6 +13,7 @@ class BuildPostResponse(BaseModel):
     new_resourcepacks: list[str]
     new_incompatible_resourcepacks: list[str]
     new_servers: list[ServerInfo]
+    files_added: dict[str, str]
 
 
 class ReBuildPostResponse(BuildPostResponse):
@@ -27,4 +28,3 @@ class ReBuildPostResponse(BuildPostResponse):
     files_strict_deleted: dict[str, str]
     files_edited: dict[str, str]
     files_strict_edited: dict[str, str]
-    files_added: dict[str, str]
