@@ -2,20 +2,20 @@ from models.v1 import (
     ClientManifest,
     DownloadFile,
     ManifestFile,
-    ServerManifest,
-    UpdateResponse,
+    ServerManifest as ServerManifestV1,
+    UpdateResponse as UpdateResponseV1,
 )
 from models.v2 import (
     FileDownloadInfo,
     FileInfo,
-    UpdatePostRequest,
-    UpdatePostResponse,
+    UpdatePostRequest as UpdatePostRequestV2,
+    UpdatePostResponse as UpdatePostResponseV2,
 )
-from models.v2.server import InstanceManifest
+from models.v2.server import InstanceManifest as InstanceManifestV2
 
 
-def InstanceManifestV1toV2(data: ServerManifest) -> InstanceManifest:
-    data_v2 = InstanceManifest(
+def InstanceManifestV1toV2(data: ServerManifestV1) -> InstanceManifestV2:
+    data_v2 = InstanceManifestV2(
         version=data.version,
         api_version=2,
         files_paths=set(),
@@ -43,8 +43,8 @@ def FileInfoV1toV2(data: ManifestFile) -> FileInfo:
     return data_v2
 
 
-def UpdatePostRequestV1toV2(data: ClientManifest) -> UpdatePostRequest:
-    data_v2 = UpdatePostRequest(
+def UpdatePostRequestV1toV2(data: ClientManifest) -> UpdatePostRequestV2:
+    data_v2 = UpdatePostRequestV2(
         resourcepacks=data.resource_packs,
         incompatible_resourcepacks=[],
         servers=data.servers,
@@ -66,7 +66,7 @@ def FileDownloadInfoV2toV1(path: str, data: FileDownloadInfo) -> DownloadFile:
     return data_v1
 
 
-def UpdatePostResponseV2toV1(data: UpdatePostResponse) -> UpdateResponse:
+def UpdatePostResponseV2toV1(data: UpdatePostResponseV2) -> UpdateResponseV1:
     old_dirs_paths = {
         "minecraft/config",
         "minecraft/mods",
@@ -74,7 +74,7 @@ def UpdatePostResponseV2toV1(data: UpdatePostResponse) -> UpdateResponse:
         "minecraft/xaero",
     }
 
-    data_v1 = UpdateResponse(
+    data_v1 = UpdateResponseV1(
         version=0,
         download=[
             FileDownloadInfoV2toV1(file_path, file)

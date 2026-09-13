@@ -5,11 +5,10 @@ from models.v2 import (
     FileInfo,
     FileDownloadInfo,
     ServerInfo,
-    UpdatePostRequest,
-    UpdatePostResponse,
 )
 from config import settings
-from models.v2.server import InstanceManifest
+from models.v3 import UpdatePostRequest, UpdatePostResponse
+from models.v3.server import InstanceManifest
 
 
 def get_client_path(instance_file_path: str) -> str:

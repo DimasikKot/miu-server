@@ -5,15 +5,23 @@ from pathlib import Path
 from fastapi import HTTPException
 
 from api.v1.transformV1toV2 import InstanceManifestV1toV2
+from api.v2.transformV2toV3 import InstanceManifestV2toV3
 from logic.get_servers import get_servers
 from config import settings
-from models.v1 import ServerManifest
+from models.v1 import ServerManifest as InstanceManifestV1
 from models.v2 import FileInfo, ServerInfo
-from models.v2.server import BuildPostResponse, InstanceManifest, ReBuildPostResponse
-from models.v2.server.InstanceManifestDirs import InstanceManifestDirs
+from models.v2.server import (
+    InstanceManifest as InstanceManifestV2,
+    InstanceManifestDirs as InstanceManifestDirsV2,
+)
+from models.v3.server import (
+    BuildPostResponse,
+    ReBuildPostResponse,
+    InstanceManifest as InstanceManifestV3,
+)
 
 
-def load_manifest(instance_path: Path) -> InstanceManifest | None:
+def load_manifest(instance_path: Path) -> InstanceManifestV3 | None:
     file = instance_path / settings.MANIFEST_NAME
     if not file.exists():
         return None
@@ -21,24 +29,29 @@ def load_manifest(instance_path: Path) -> InstanceManifest | None:
     with open(file, encoding="utf-8") as f:
         manifest_json = json.load(f)
         if manifest_json.get("api_version") is None:
-            manifest_v1 = ServerManifest.model_validate(manifest_json)
+            manifest_v1 = InstanceManifestV1.model_validate(manifest_json)
             manifest_v2 = InstanceManifestV1toV2(data=manifest_v1)
-            return InstanceManifest.model_validate(manifest_v2)
+            manifest_v3 = InstanceManifestV2toV3(data=manifest_v2)
+            return InstanceManifestV3.model_validate(manifest_v3)
+        if manifest_json.get("api_version") == 2:
+            manifest_v2 = InstanceManifestV2.model_validate(manifest_json)
+            manifest_v3 = InstanceManifestV2toV3(data=manifest_v2)
+            return InstanceManifestV3.model_validate(manifest_v3)
 
-        return InstanceManifest.model_validate(manifest_json)
+        return InstanceManifestV3.model_validate(manifest_json)
 
 
-def load_manifest_dirs(instance_path: Path) -> InstanceManifestDirs | None:
+def load_manifest_dirs(instance_path: Path) -> InstanceManifestDirsV2 | None:
     file = instance_path / settings.MANIFEST_DIRS_NAME
     if not file.exists():
         return None
 
     with open(file, encoding="utf-8") as f:
         manifest_json = json.load(f)
-        return InstanceManifestDirs.model_validate(manifest_json)
+        return InstanceManifestDirsV2.model_validate(manifest_json)
 
 
-def save_manifest(instance_path: Path, manifest: InstanceManifest):
+def save_manifest(instance_path: Path, manifest: InstanceManifestV3):
     instance_path.parent.mkdir(parents=True, exist_ok=True)
     with open(instance_path, "w", encoding="utf-8") as f:
         # json.dump(manifest.model_dump(), f, indent=4, ensure_ascii=False)
@@ -184,7 +197,7 @@ def get_alternative_path(path: str) -> str | None:
     return None
 
 
-def _is_strict(path: str, dirs: InstanceManifestDirs) -> bool:
+def _is_strict(path: str, dirs: InstanceManifestDirsV2) -> bool:
     if path in dirs.strict_files_paths:
         return True
     return any(path.startswith(d.rstrip("/") + "/") for d in dirs.strict_dirs_paths)
@@ -192,7 +205,7 @@ def _is_strict(path: str, dirs: InstanceManifestDirs) -> bool:
 
 def build_manifest(
     instance_path: Path,
-) -> BuildPostResponse | ReBuildPostResponse | InstanceManifest:
+) -> BuildPostResponse | ReBuildPostResponse | InstanceManifestV3:
     new_resourcepacks = get_resourcepacks(instance_path)
     new_incompatible_resourcepacks = get_incompatible_resourcepacks(instance_path)
     new_servers = get_servers(instance_path)
@@ -306,7 +319,7 @@ def build_manifest(
             if not new_deleted[old_deleted_file_path]:
                 del new_deleted[old_deleted_file_path]
 
-    new_manifest = InstanceManifest(
+    new_manifest = InstanceManifestV3(
         version=version,
         api_version=2,
         files_paths=manifest_dirs.files_paths,

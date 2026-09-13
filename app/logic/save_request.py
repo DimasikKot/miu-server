@@ -3,7 +3,7 @@ import time
 
 from fastapi import Request
 
-from models.v2 import UpdatePostRequest
+from models.v3 import UpdatePostRequest
 
 
 def save_request(
