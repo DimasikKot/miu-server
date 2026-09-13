@@ -35,6 +35,6 @@ app.mount(
 # )
 
 # Подключение всех версий API
-app.include_router(router_v1, tags=["V1"])
 app.include_router(router_v2, tags=["V2"], prefix="/api/v2")
 app.include_router(router_v3, tags=["V3"], prefix="/api/v3")
+app.include_router(router_v1, tags=["V1"])
