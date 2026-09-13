@@ -15,6 +15,6 @@ class InstanceManifest(BaseModel):
     resourcepacks: list[str]
     incompatible_resourcepacks: list[str]
     servers: list[ServerInfo]
+    waypoints: dict[str, list[Waypoint]]
     deleted: dict[str, set[str]]  # Название: SHA
     files: dict[str, FileInfo]  # path: [FileInfo]
-    waypoints: dict[str, list[Waypoint]]
