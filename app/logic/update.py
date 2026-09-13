@@ -1,14 +1,15 @@
 from urllib.parse import quote
 
 from logic.build import get_alternative_path
-from models.FileDownloadInfo import FileDownloadInfo
-from models.FileInfo import FileInfo
-from models.ServerInfo import ServerInfo
-from models.UpdatePostRequest import UpdatePostRequest
-from models.UpdatePostResponse import UpdatePostResponse
-from models.server.InstanceManifest import InstanceManifest
-from models.ServerInfo import ServerInfo
+from models.v2 import (
+    FileInfo,
+    FileDownloadInfo,
+    ServerInfo,
+    UpdatePostRequest,
+    UpdatePostResponse,
+)
 from config import settings
+from models.v2.server import InstanceManifest
 
 
 def get_client_path(instance_file_path: str) -> str:

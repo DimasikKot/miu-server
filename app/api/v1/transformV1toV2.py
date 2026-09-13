@@ -1,15 +1,18 @@
-from api.v1.models import (
+from models.v1 import (
     ClientManifest,
     DownloadFile,
     ManifestFile,
     ServerManifest,
     UpdateResponse,
 )
-from models.FileDownloadInfo import FileDownloadInfo
-from models.FileInfo import FileInfo
-from models.UpdatePostRequest import UpdatePostRequest
-from models.UpdatePostResponse import UpdatePostResponse
-from models.server.InstanceManifest import InstanceManifest
+
+from models.v2 import (
+    FileDownloadInfo,
+    FileInfo,
+    UpdatePostRequest,
+    UpdatePostResponse,
+)
+from models.v2.server import InstanceManifest
 
 
 def InstanceManifestV1toV2(data: ServerManifest) -> InstanceManifest:

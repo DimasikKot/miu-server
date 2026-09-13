@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from models.FileDownloadInfo import FileDownloadInfo
-from models.ServerInfo import ServerInfo
+from models.v2.FileDownloadInfo import FileDownloadInfo
+from models.v2.ServerInfo import ServerInfo
 
 
 class UpdatePostResponse(BaseModel):

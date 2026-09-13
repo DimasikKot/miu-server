@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, Request
 
-from api.v1.models import ClientManifest, UpdateResponse
+from models.v1 import ClientManifest, UpdateResponse
 from api.v1.transformV1toV2 import UpdatePostRequestV1toV2, UpdatePostResponseV2toV1
 from logic.resolve_instance_path import resolve_instance_path
 from logic.update import compare

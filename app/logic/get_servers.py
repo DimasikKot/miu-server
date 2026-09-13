@@ -2,7 +2,7 @@ from pathlib import Path
 
 import nbtlib  # type: ignore
 
-from models.ServerInfo import ServerInfo
+from models.v2 import ServerInfo
 
 
 def get_servers(instance_path: Path) -> list[ServerInfo]:

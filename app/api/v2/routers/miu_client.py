@@ -11,9 +11,8 @@ from logic.miu_client import (
 
 from logic.mmc_pack_hash import normalized_sha256
 from logic.resolve_instance_path import resolve_instance_path
-from models.MiuClientGetResponse import MiuClientGetResponse
-from models.FileDownloadInfo import FileDownloadInfo
-from models.server.MiuClientManifest import MiuClientManifest
+from models.v2 import MiuClientGetResponse, FileDownloadInfo
+from models.v2.server import MiuClientManifest
 from config import settings
 
 router_miu_client: APIRouter = APIRouter()

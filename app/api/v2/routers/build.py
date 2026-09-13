@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Path
 
 from logic.resolve_instance_path import resolve_instance_path
-from models.server.BuildPostResponse import BuildPostResponse, ReBuildPostResponse
 from logic.build import build_manifest
-from models.server.InstanceManifest import InstanceManifest
+from models.v2.server import BuildPostResponse, InstanceManifest, ReBuildPostResponse
 
 router_build: APIRouter = APIRouter()
 

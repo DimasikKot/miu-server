@@ -4,15 +4,13 @@ from pathlib import Path
 
 from fastapi import HTTPException
 
-from api.v1.models import ServerManifest
 from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from logic.get_servers import get_servers
-from models.FileInfo import FileInfo
-from models.ServerInfo import ServerInfo
-from models.server.BuildPostResponse import BuildPostResponse, ReBuildPostResponse
-from models.server.InstanceManifest import InstanceManifest
 from config import settings
-from models.server.InstanceManifestDirs import InstanceManifestDirs
+from models.v1 import ServerManifest
+from models.v2 import FileInfo, ServerInfo
+from models.v2.server import BuildPostResponse, InstanceManifest, ReBuildPostResponse
+from models.v2.server.InstanceManifestDirs import InstanceManifestDirs
 
 
 def load_manifest(instance_path: Path) -> InstanceManifest | None:

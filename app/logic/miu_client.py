@@ -1,8 +1,8 @@
 import json
 
-from models.server.MiuClientManifest import MiuClientManifest
-from models.server.MiuClientSettingsManifest import MiuClientSettingsManifest
+
 from config import settings
+from models.v2.server import MiuClientManifest, MiuClientSettingsManifest
 
 
 def load_miu_client_manifest() -> MiuClientManifest | None:

@@ -4,9 +4,7 @@ from logic.resolve_instance_path import resolve_instance_path
 from logic.save_request import save_request
 from logic.update import compare
 from logic.build import load_manifest
-from models.UpdateGetResponse import UpdateGetResponse
-from models.UpdatePostRequest import UpdatePostRequest
-from models.UpdatePostResponse import UpdatePostResponse
+from models.v2 import UpdateGetResponse, UpdatePostRequest, UpdatePostResponse
 
 router_update: APIRouter = APIRouter()
 

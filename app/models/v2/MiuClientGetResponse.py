@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from models.FileDownloadInfo import FileDownloadInfo
+from models.v2.FileDownloadInfo import FileDownloadInfo
 
 
 class MiuClientGetResponse(BaseModel):
