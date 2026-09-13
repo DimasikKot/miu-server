@@ -9,6 +9,7 @@ from logic.miu_client import (
     save_miu_client_manifest,
 )
 
+from logic.mmc_pack_hash import normalized_sha256
 from logic.resolve_instance_path import resolve_instance_path
 from models.MiuClientGetResponse import MiuClientGetResponse
 from models.FileDownloadInfo import FileDownloadInfo
@@ -56,7 +57,7 @@ def miu_client_get(
         ),
         mmc_pack_path=str(relative),
         mmc_pack_file=FileDownloadInfo(
-            sha256=sha256(mmc_pack_path),
+            sha256=normalized_sha256(mmc_pack_path),
             size=mmc_pack_path.stat().st_size,
             url=download_url,
         ),
