@@ -442,6 +442,7 @@ def build_manifest(
             new_resourcepacks=new_manifest.resourcepacks,
             new_incompatible_resourcepacks=new_manifest.incompatible_resourcepacks,
             new_servers=new_manifest.servers,
+            new_waypoints=new_manifest.waypoints,
             files_added={
                 file_path: file.sha256 for file_path, file in new_manifest.files.items()
             },

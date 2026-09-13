@@ -291,9 +291,9 @@ def compare_waypoints(
 
     for dim, points in instance_waypoints.items():
         bucket = result.setdefault(dim, [])
-        existing = {(w.name, w.x, w.y, w.z) for w in bucket}
+        existing = {(w.x, w.z) for w in bucket}
         for waypoint in points:
-            key = (waypoint.name, waypoint.x, waypoint.y, waypoint.z)
+            key = (waypoint.x, waypoint.z)
             if key not in existing:
                 bucket.append(waypoint)
                 existing.add(key)
