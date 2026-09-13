@@ -46,7 +46,7 @@ def parse_waypoint_line(line: str) -> Waypoint | None:
 
 def get_waypoints(instance_path: Path) -> dict[str, list[Waypoint]]:
     """
-    Читает метки из: minecraft/xaero/minimap/<server>/dim%<N>/mw$default_1.txt
+    Читает метки из: minecraft/xaero/minimap/<server>/dim%<N>/mw$*.txt
 
     Возвращает словарь с ключом "<server>/<dimension>",
     например {"Multiplayer_purmur.exaroton.me/overworld": [...]}.
@@ -65,18 +65,16 @@ def get_waypoints(instance_path: Path) -> dict[str, list[Waypoint]]:
             if not dim_dir.is_dir() or not dim_dir.name.startswith("dim%"):
                 continue
 
-            file_path = dim_dir / "mw$default_1.txt"
-            if not file_path.exists():
-                continue
-
             dimension = DIMENSION_MAP.get(dim_dir.name, dim_dir.name)
             key = f"{server_name}/{dimension}"
             bucket = result.setdefault(key, [])
 
-            with open(file_path, "r", encoding="utf-8") as f:
-                for line in f:
-                    waypoint = parse_waypoint_line(line)
-                    if waypoint is not None:
-                        bucket.append(waypoint)
+            # Читаем все файлы mw$*.txt в директории измерения
+            for file_path in dim_dir.glob("mw$*.txt"):
+                with open(file_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        waypoint = parse_waypoint_line(line)
+                        if waypoint is not None:
+                            bucket.append(waypoint)
 
     return result
