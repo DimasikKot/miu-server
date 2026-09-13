@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 
 from models.v2 import ServerInfo
+from models.v3 import Waypoint
 
 
 class ReBuildPostResponse(BaseModel):
@@ -21,6 +22,8 @@ class ReBuildPostResponse(BaseModel):
     del_incompatible_resourcepacks: list[str] = Field(default_factory=list)
     new_servers: list[ServerInfo] = Field(default_factory=list[ServerInfo])
     del_servers: list[ServerInfo] = Field(default_factory=list[ServerInfo])
+    new_waypoints: dict[str, list[Waypoint]] = Field(default_factory=dict)
+    del_waypoints: dict[str, list[Waypoint]] = Field(default_factory=dict)
     files_deleted: dict[str, str] = Field(default_factory=dict)  # path: sha256
     files_strict_deleted: dict[str, str] = Field(default_factory=dict)
     files_edited: dict[str, str] = Field(default_factory=dict)

@@ -7,7 +7,7 @@ from models.v2 import (
     ServerInfo,
 )
 from config import settings
-from models.v3 import UpdatePostRequest, UpdatePostResponse
+from models.v3 import UpdatePostRequest, UpdatePostResponse, Waypoint
 from models.v3.server import InstanceManifest
 
 
@@ -279,6 +279,24 @@ def compare_incompatible_resourcepacks(
             existing_resource_packs.add(
                 resource_pack
             )  # Обновляем множество, чтобы не добавить его повторно
+
+    return result
+
+
+def compare_waypoints(
+    request_waypoints: dict[str, list[Waypoint]],
+    instance_waypoints: dict[str, list[Waypoint]],
+) -> dict[str, list[Waypoint]]:
+    result = {dim: list(points) for dim, points in request_waypoints.items()}
+
+    for dim, points in instance_waypoints.items():
+        bucket = result.setdefault(dim, [])
+        existing = {(w.name, w.x, w.y, w.z) for w in bucket}
+        for waypoint in points:
+            key = (waypoint.name, waypoint.x, waypoint.y, waypoint.z)
+            if key not in existing:
+                bucket.append(waypoint)
+                existing.add(key)
 
     return result
 

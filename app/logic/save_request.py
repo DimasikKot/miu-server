@@ -24,6 +24,7 @@ def save_request(
         resourcepacks=request.resourcepacks,
         incompatible_resourcepacks=request.incompatible_resourcepacks,
         servers=request.servers,
+        waypoints=request.waypoints,
         files={},
     )
 

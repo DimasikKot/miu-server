@@ -23,6 +23,7 @@ def InstanceManifestV2toV3(data: InstanceManifestV2) -> InstanceManifestV3:
         servers=data.servers,
         deleted=data.deleted,
         files=data.files,
+        waypoints={},
     )
 
     return data_v3
@@ -33,6 +34,7 @@ def UpdatePostRequestV2toV3(data: UpdatePostRequestV2) -> UpdatePostRequestV3:
         resourcepacks=data.resourcepacks,
         incompatible_resourcepacks=data.incompatible_resourcepacks,
         servers=data.servers,
+        waypoints={},
         files=data.files,
     )
 

@@ -14,6 +14,7 @@ from models.v2.server import (
     InstanceManifest as InstanceManifestV2,
     InstanceManifestDirs as InstanceManifestDirsV2,
 )
+from models.v3 import Waypoint
 from models.v3.server import (
     BuildPostResponse,
     ReBuildPostResponse,
@@ -186,6 +187,28 @@ def _diff_servers(new_servers: list[ServerInfo], old_servers: list[ServerInfo]):
 
     old_keys = {key(s) for s in old_servers}
     return [s for s in new_servers if key(s) not in old_keys]
+
+
+def _waypoint_key(w: Waypoint):
+    return (w.name, w.x, w.y, w.z)
+
+
+def _diff_waypoints(
+    new_waypoints: dict[str, list[Waypoint]],
+    old_waypoints: dict[str, list[Waypoint]] | None,
+) -> dict[str, list[Waypoint]]:
+    """Возвращает точки из new_waypoints, которых не было в old_waypoints."""
+    if old_waypoints is None:
+        return {dim: list(pts) for dim, pts in new_waypoints.items()}
+
+    result: dict[str, list[Waypoint]] = {}
+    for dim, new_points in new_waypoints.items():
+        old_points = old_waypoints.get(dim, [])
+        old_keys = {_waypoint_key(w) for w in old_points}
+        diff = [w for w in new_points if _waypoint_key(w) not in old_keys]
+        if diff:
+            result[dim] = diff
+    return result
 
 
 def get_alternative_path(path: str) -> str | None:
@@ -384,6 +407,12 @@ def build_manifest(
             ),
             del_servers=_diff_servers(old_manifest.servers, new_manifest.servers),
             new_servers=_diff_servers(new_manifest.servers, old_manifest.servers),
+            del_waypoints=_diff_waypoints(
+                old_manifest.waypoints, new_manifest.waypoints
+            ),
+            new_waypoints=_diff_waypoints(
+                new_manifest.waypoints, old_manifest.waypoints
+            ),
             files_deleted=files_deleted,
             files_strict_deleted=files_strict_deleted,
             files_edited=files_edited,
