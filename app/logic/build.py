@@ -8,6 +8,7 @@ from api.v1.transformV1toV2 import InstanceManifestV1toV2
 from api.v2.transformV2toV3 import InstanceManifestV2toV3
 from logic.get_servers import get_servers
 from config import settings
+from logic.xaero_check import get_waypoints
 from models.v1 import ServerManifest as InstanceManifestV1
 from models.v2 import FileInfo, ServerInfo
 from models.v2.server import (
@@ -232,6 +233,7 @@ def build_manifest(
     new_resourcepacks = get_resourcepacks(instance_path)
     new_incompatible_resourcepacks = get_incompatible_resourcepacks(instance_path)
     new_servers = get_servers(instance_path)
+    new_waypoints = get_waypoints(instance_path)
 
     old_manifest = load_manifest(instance_path)
     files_deleted: dict[str, str] = {}
@@ -352,6 +354,7 @@ def build_manifest(
         resourcepacks=new_resourcepacks,
         incompatible_resourcepacks=new_incompatible_resourcepacks,
         servers=new_servers,
+        waypoints=new_waypoints,
         deleted=new_deleted,
         files=new_files,
     )

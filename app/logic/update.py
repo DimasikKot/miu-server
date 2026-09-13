@@ -317,6 +317,7 @@ def compare(
         request.incompatible_resourcepacks, instance_manifest.incompatible_resourcepacks
     )
     new_servers = compare_servers(request.servers, instance_manifest.servers)
+    new_waypoints = compare_waypoints(request.waypoints, instance_manifest.waypoints)
     need_delete = build_delete_list(request, instance_manifest)
     need_download = build_download_list(
         request, instance_manifest, instance_name, base_url
@@ -326,6 +327,7 @@ def compare(
         new_resourcepacks=new_resourcepacks,
         new_incompatible_resourcepacks=new_incompatible_resourcepacks,
         new_servers=new_servers,
+        new_waypoints=new_waypoints,
         need_delete=need_delete,
         need_download=need_download,
     )
