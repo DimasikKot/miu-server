@@ -5,7 +5,6 @@ from models.v1 import (
     ServerManifest,
     UpdateResponse,
 )
-
 from models.v2 import (
     FileDownloadInfo,
     FileInfo,
@@ -16,7 +15,6 @@ from models.v2.server import InstanceManifest
 
 
 def InstanceManifestV1toV2(data: ServerManifest) -> InstanceManifest:
-    # TODO add files and strict
     data_v2 = InstanceManifest(
         version=data.version,
         api_version=2,
