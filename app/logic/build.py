@@ -346,7 +346,7 @@ def build_manifest(
 
     new_manifest = InstanceManifestV3(
         version=version,
-        api_version=2,
+        api_version=3,
         files_paths=manifest_dirs.files_paths,
         dirs_paths=manifest_dirs.dirs_paths,
         strict_files_paths=manifest_dirs.strict_files_paths,
