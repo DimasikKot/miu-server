@@ -310,16 +310,16 @@ def build_manifest(
             if edited_file.sha256 != old_file.sha256:
                 if _is_strict(old_file_path, manifest_dirs):
                     # узнаём новые удалённые файлы
-                    print(f"file strict edited[{old_file_path}] = {old_file.sha256}")
-                    files_strict_edited[old_file_path] = old_file.sha256
+                    print(f"file strict edited[{old_file_path}] = {edited_file.sha256}")
+                    files_strict_edited[old_file_path] = edited_file.sha256
 
                     new_deleted.setdefault(old_file_path, set())
                     if old_file.sha256 not in new_deleted[old_file_path]:
                         new_deleted[old_file_path].add(old_file.sha256)
                 else:
                     # узнаём новые удалённые файлы
-                    print(f"file edited[{old_file_path}] = {old_file.sha256}")
-                    files_edited[old_file_path] = old_file.sha256
+                    print(f"file edited[{old_file_path}] = {edited_file.sha256}")
+                    files_edited[old_file_path] = edited_file.sha256
 
         # если sha256 снова существует среди актуальных файлов,
         # он больше не является удалённым
