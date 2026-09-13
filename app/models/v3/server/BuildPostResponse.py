@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 
-from models.v2.ServerInfo import ServerInfo
+from models.v2 import ServerInfo
 from models.v3 import Waypoint
 
 

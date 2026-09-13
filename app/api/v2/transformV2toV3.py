@@ -17,7 +17,7 @@ def InstanceManifestV2toV3(data: InstanceManifestV2) -> InstanceManifestV3:
         files_paths=data.files_paths,
         dirs_paths=data.dirs_paths,
         strict_files_paths=data.strict_files_paths,
-        strict_dirs_paths=data.strict_files_paths,
+        strict_dirs_paths=data.strict_dirs_paths,
         resourcepacks=data.resourcepacks,
         incompatible_resourcepacks=data.incompatible_resourcepacks,
         servers=data.servers,

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
-from models.v2.FileInfo import FileInfo
-from models.v2.ServerInfo import ServerInfo
+from models.v2 import FileInfo
+from models.v2 import ServerInfo
 from models.v3 import Waypoint
 
 

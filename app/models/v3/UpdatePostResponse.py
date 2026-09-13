@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 from models.v2.FileDownloadInfo import FileDownloadInfo
 from models.v2.ServerInfo import ServerInfo
-from models.v3 import Waypoint
+from models.v3.Waypoint import Waypoint
 
 
 class UpdatePostResponse(BaseModel):
