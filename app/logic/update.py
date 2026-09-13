@@ -293,6 +293,12 @@ def compare_waypoints(
         bucket = result.setdefault(dim, [])
         existing = {(w.x, w.z) for w in bucket}
         for waypoint in points:
+            # добавляем только те точки, у которых совпадают нужные параметры
+            if waypoint.rotate_on_tp != True:
+                continue
+            if waypoint.tp_yaw != -540:
+                continue
+
             key = (waypoint.x, waypoint.z)
             if key not in existing:
                 bucket.append(waypoint)
@@ -307,7 +313,7 @@ def compare(
     instance_name: str,
     base_url: str,
 ) -> UpdatePostResponse:
-    if request.resourcepacks == []:
+    if len(request.resourcepacks) <= 2:
         new_resourcepacks = compare_resourcepacks(
             request.resourcepacks, instance_manifest.resourcepacks
         )
